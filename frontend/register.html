@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Account | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body style="background: linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%);">
+  <header class="header"></header>
+
+  <div class="container" style="max-width: 480px; padding-top: 50px; padding-bottom: 80px;">
+    <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 32px; box-shadow: var(--shadow-xl);">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div style="font-size: 32px; margin-bottom: 8px;">🎬</div>
+        <h1 style="font-size: 24px; font-weight: 800;">Create Your Account</h1>
+        <p style="color: var(--text-muted); font-size: 14px;">Join India's premier creative production marketplace</p>
+      </div>
+
+      <form id="register-form" onsubmit="handleRegister(event)">
+        <!-- Role Picker -->
+        <div class="form-group">
+          <label class="form-label">I want to join as a:</label>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <label style="border: 2px solid var(--primary); padding: 10px; border-radius: var(--radius-md); text-align: center; cursor: pointer; font-size: 13px; font-weight: 700; background: var(--primary-light); color: var(--primary);">
+              <input type="radio" name="role" value="customer" checked style="margin-right: 4px;"> Creator / Crew
+            </label>
+            <label style="border: 1px solid var(--border); padding: 10px; border-radius: var(--radius-md); text-align: center; cursor: pointer; font-size: 13px; font-weight: 700;">
+              <input type="radio" name="role" value="owner" style="margin-right: 4px;"> Property Owner
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" id="reg-name" class="form-control" required placeholder="e.g. Arun Kumar" autofocus>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input type="email" id="reg-email" class="form-control" required placeholder="you@example.com">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Phone Number *</label>
+          <input type="tel" id="reg-phone" class="form-control" required placeholder="+91 98400 12345">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password * (Min 6 characters)</label>
+          <input type="password" id="reg-password" class="form-control" required minlength="6" placeholder="••••••••">
+        </div>
+
+        <div class="alert alert-info" style="font-size: 12px; margin-bottom: 18px;">
+          ℹ️ <b>Marketplace Policy:</b> New accounts start in <b>Pending</b> status until verified by our moderation team to ensure a trusted community.
+        </div>
+
+        <button type="submit" id="btn-register" class="btn btn-primary btn-block btn-lg">
+          Complete Registration &rarr;
+        </button>
+      </form>
+
+      <div style="text-align: center; margin-top: 20px; font-size: 14px;">
+        Already have an account? <a href="/login.html" style="color: var(--primary); font-weight: 700;">Sign In</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check query param for role
+      const params = new URLSearchParams(window.location.search);
+      const roleParam = params.get('role');
+      if (roleParam === 'owner') {
+        const ownerRadio = document.querySelector('input[name="role"][value="owner"]');
+        if (ownerRadio) {
+          ownerRadio.checked = true;
+          ownerRadio.parentElement.style.border = '2px solid var(--primary)';
+          ownerRadio.parentElement.style.background = 'var(--primary-light)';
+          ownerRadio.parentElement.style.color = 'var(--primary)';
+          
+          const custRadio = document.querySelector('input[name="role"][value="customer"]');
+          custRadio.parentElement.style.border = '1px solid var(--border)';
+          custRadio.parentElement.style.background = 'white';
+          custRadio.parentElement.style.color = 'var(--text-main)';
+        }
+      }
+
+      // Add radio click listeners
+      document.querySelectorAll('input[name="role"]').forEach(radio => {
+        radio.addEventListener('change', (e) => {
+          document.querySelectorAll('input[name="role"]').forEach(r => {
+            r.parentElement.style.border = '1px solid var(--border)';
+            r.parentElement.style.background = 'white';
+            r.parentElement.style.color = 'var(--text-main)';
+          });
+          e.target.parentElement.style.border = '2px solid var(--primary)';
+          e.target.parentElement.style.background = 'var(--primary-light)';
+          e.target.parentElement.style.color = 'var(--primary)';
+        });
+      });
+    });
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const role = document.querySelector('input[name="role"]:checked').value;
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      const btn = document.getElementById('btn-register');
+      btn.disabled = true;
+      btn.innerText = 'Creating account...';
+
+      try {
+        const res = await apiFetch('/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name, email, phone, password, role })
+        });
+
+        localStorage.setItem('sms_access_token', res.access_token);
+        localStorage.setItem('sms_user', JSON.stringify(res.user));
+
+        showToast('Registration successful! Your account is pending admin verification.', 'success');
+
+        setTimeout(() => {
+          if (role === 'owner') {
+            window.location.href = '/owner.html';
+          } else {
+            window.location.href = '/locations.html';
+          }
+        }, 800);
+
+      } catch (err) {
+        showToast(err.message, 'error');
+        btn.disabled = false;
+        btn.innerText = 'Complete Registration →';
+      }
+    }
+  </script>
+</body>
+</html>

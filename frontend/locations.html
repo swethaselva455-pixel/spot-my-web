@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Explore Locations | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .filter-bar {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 24px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+      gap: 16px;
+      align-items: center;
+    }
+    @media (max-width: 992px) {
+      .filter-bar {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    @media (max-width: 600px) {
+      .filter-bar {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header"></header>
+
+  <div class="container" style="padding-top: 30px; padding-bottom: 60px;">
+    <!-- Page Header -->
+    <div style="margin-bottom: 24px;">
+      <h1 style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Explore Shoot Locations</h1>
+      <p style="color: var(--text-muted); font-size: 14px;">Find and book the perfect location for your upcoming production.</p>
+    </div>
+
+    <!-- Live Filter Bar -->
+    <div class="filter-bar">
+      <div>
+        <label class="form-label" style="font-size: 11px; text-transform: uppercase;">Search by Keyword</label>
+        <input type="text" id="filter-search" class="form-control" placeholder="Villa name, area, features...">
+      </div>
+      <div>
+        <label class="form-label" style="font-size: 11px; text-transform: uppercase;">Shoot Category</label>
+        <select id="filter-category" class="form-control">
+          <option value="">All Categories</option>
+          <option value="Pre-wedding">Pre-wedding</option>
+          <option value="Fashion">Fashion</option>
+          <option value="Cinematography">Cinematography</option>
+          <option value="Reels">Reels</option>
+          <option value="Maternity">Maternity</option>
+          <option value="Wedding">Wedding</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" style="font-size: 11px; text-transform: uppercase;">Space Type</label>
+        <select id="filter-type" class="form-control">
+          <option value="">All Spaces</option>
+          <option value="villa">Villa</option>
+          <option value="studio">Studio</option>
+          <option value="beach">Beach</option>
+          <option value="garden">Garden</option>
+          <option value="heritage">Heritage</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label" style="font-size: 11px; text-transform: uppercase;">Shoot Date</label>
+        <input type="date" id="filter-date" class="form-control">
+      </div>
+      <div>
+        <label class="form-label" style="font-size: 11px; text-transform: uppercase;">Sort By</label>
+        <select id="filter-sort" class="form-control">
+          <option value="recommended">Recommended</option>
+          <option value="low">Price: Low to High</option>
+          <option value="high">Price: High to Low</option>
+        </select>
+      </div>
+      <div style="display: flex; align-items: flex-end;">
+        <button class="btn btn-secondary btn-block" onclick="resetFilters()">Reset</button>
+      </div>
+    </div>
+
+    <!-- Results Count Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div id="results-count" style="font-weight: 600; font-size: 15px; color: var(--text-main);">
+        Showing locations...
+      </div>
+      <div id="pagination-controls" style="display: flex; gap: 8px;">
+        <button id="btn-prev-page" class="btn btn-secondary btn-sm" disabled onclick="changePage(-1)">&larr; Previous</button>
+        <span id="page-indicator" style="font-size: 13px; font-weight: 600; align-self: center;">Page 1</span>
+        <button id="btn-next-page" class="btn btn-secondary btn-sm" onclick="changePage(1)">Next &rarr;</button>
+      </div>
+    </div>
+
+    <!-- Grid Container -->
+    <div class="grid-cards" id="locations-grid">
+      <div style="grid-column: 1 / -1; text-align: center; padding: 60px; color: var(--text-muted);">
+        Loading locations...
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    let currentPage = 1;
+    let debounceTimer = null;
+
+    // Initialize from URL params if present
+    function initFiltersFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('q')) document.getElementById('filter-search').value = params.get('q');
+      if (params.get('category')) document.getElementById('filter-category').value = params.get('category');
+      if (params.get('type')) document.getElementById('filter-type').value = params.get('type');
+      if (params.get('date')) document.getElementById('filter-date').value = params.get('date');
+      if (params.get('sort')) document.getElementById('filter-sort').value = params.get('sort');
+
+      // Set min date for date picker to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('filter-date').min = today;
+    }
+
+    async function fetchLocations() {
+      const grid = document.getElementById('locations-grid');
+      const countEl = document.getElementById('results-count');
+
+      const q = document.getElementById('filter-search').value.trim();
+      const category = document.getElementById('filter-category').value;
+      const type = document.getElementById('filter-type').value;
+      const date = document.getElementById('filter-date').value;
+      const sort = document.getElementById('filter-sort').value;
+
+      const params = new URLSearchParams({
+        page: currentPage,
+        page_size: 12,
+        sort: sort
+      });
+
+      if (q) params.set('q', q);
+      if (category) params.set('category', category);
+      if (type) params.set('type', type);
+      if (date) params.set('date', date);
+
+      // Update URL without reload
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+
+      try {
+        const locations = await apiFetch(`/properties?${params.toString()}`);
+        
+        countEl.innerText = `Showing ${locations.length} location${locations.length === 1 ? '' : 's'}${date ? ` available on ${date}` : ''}`;
+        document.getElementById('page-indicator').innerText = `Page ${currentPage}`;
+        document.getElementById('btn-prev-page').disabled = (currentPage === 1);
+        document.getElementById('btn-next-page').disabled = (locations.length < 12);
+
+        if (!locations || locations.length === 0) {
+          grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px; background: white; border-radius: var(--radius-lg); border: 1px solid var(--border);">
+              <div style="font-size: 36px; margin-bottom: 12px;">🔍</div>
+              <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 6px;">No locations found</h3>
+              <p style="color: var(--text-muted); font-size: 14px; max-width: 400px; margin: 0 auto 16px;">Try adjusting your filters or selecting a different date.</p>
+              <button class="btn btn-secondary btn-sm" onclick="resetFilters()">Clear Filters</button>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = locations.map(loc => `
+          <div class="card" onclick="window.location.href='/property.html?id=${loc.id}${date ? `&date=${date}` : ''}'" style="cursor: pointer;">
+            <div class="card-img-wrap">
+              <img src="${loc.cover_image || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80'}" class="card-img" alt="${loc.name}">
+              <span class="card-badge">${loc.property_type}</span>
+              ${loc.avg_rating > 0 ? `<span class="card-rating">★ ${loc.avg_rating.toFixed(1)}</span>` : ''}
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">${loc.name}</h3>
+              <div class="card-location">📍 ${loc.area}, ${loc.city}</div>
+              <div class="card-tags">
+                ${loc.categories.slice(0, 3).map(c => `<span class="card-tag">${c}</span>`).join('')}
+              </div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+                Min ${loc.min_hours}h &bull; Max crew: ${loc.max_crew_size} people
+              </div>
+              <div class="card-footer">
+                <div class="card-price">${formatINR(loc.hourly_price)} <span>/ hour</span></div>
+                <span class="btn btn-primary btn-sm">Book Slot &rarr;</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; color: var(--danger); text-align: center; padding: 40px;">Error: ${e.message}</div>`;
+      }
+    }
+
+    function triggerDebounce() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        currentPage = 1;
+        fetchLocations();
+      }, 350);
+    }
+
+    function changePage(delta) {
+      currentPage = Math.max(1, currentPage + delta);
+      fetchLocations();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-search').value = '';
+      document.getElementById('filter-category').value = '';
+      document.getElementById('filter-type').value = '';
+      document.getElementById('filter-date').value = '';
+      document.getElementById('filter-sort').value = 'recommended';
+      currentPage = 1;
+      fetchLocations();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initFiltersFromURL();
+      fetchLocations();
+
+      document.getElementById('filter-search').addEventListener('input', triggerDebounce);
+      document.getElementById('filter-category').addEventListener('change', () => { currentPage = 1; fetchLocations(); });
+      document.getElementById('filter-type').addEventListener('change', () => { currentPage = 1; fetchLocations(); });
+      document.getElementById('filter-date').addEventListener('change', () => { currentPage = 1; fetchLocations(); });
+      document.getElementById('filter-sort').addEventListener('change', () => { currentPage = 1; fetchLocations(); });
+    });
+  </script>
+</body>
+</html>

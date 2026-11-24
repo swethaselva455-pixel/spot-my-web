@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Chart.js for Admin Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .admin-bar {
+      background: #1E293B;
+      color: white;
+      padding: 12px 0;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-bar">
+    <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+      <div>🔒 <b>Master Admin Control Center</b> &bull; SpotMyShoot Operations</div>
+      <div id="dynamic-header-date" style="color: #94A3B8;">Loading date...</div>
+    </div>
+  </div>
+
+  <header class="header"></header>
+
+  <div class="container" style="padding-top: 30px; padding-bottom: 70px;">
+    <!-- Dashboard Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value" id="adm-stat-users">0</div>
+        <div style="font-size: 11px; color: var(--warning); margin-top: 4px;" id="adm-pending-users-label">0 pending review</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Properties Listed</div>
+        <div class="stat-value" id="adm-stat-props">0</div>
+        <div style="font-size: 11px; color: var(--warning); margin-top: 4px;" id="adm-pending-props-label">0 pending approval</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Bookings</div>
+        <div class="stat-value" id="adm-stat-bookings">0</div>
+        <div style="font-size: 11px; color: var(--success); margin-top: 4px;" id="adm-confirmed-bookings-label">0 confirmed/completed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Platform Gross Revenue</div>
+        <div class="stat-value" id="adm-stat-revenue" style="color: var(--primary);">₹0</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="adm-platform-fee-label">₹0 net commission</div>
+      </div>
+    </div>
+
+    <!-- Admin Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchAdminTab('properties', this)">Location Approvals (<span id="badge-prop-count">0</span>)</button>
+      <button class="tab-btn" onclick="switchAdminTab('users', this)">User Management (<span id="badge-user-count">0</span>)</button>
+      <button class="tab-btn" onclick="switchAdminTab('bookings', this)">Customer Bookings</button>
+      <button class="tab-btn" onclick="switchAdminTab('reports', this)">Financial Reports & Analytics</button>
+    </div>
+
+    <!-- Tab 1: Property Approvals -->
+    <div id="tab-properties" class="tab-pane active">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;">All Properties & Location Approvals</h3>
+        <select id="prop-filter-status" class="form-control" style="width: 200px;" onchange="loadAdminProperties()">
+          <option value="all">All Statuses</option>
+          <option value="pending" selected>Pending Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Property Name</th>
+              <th>Host / Owner</th>
+              <th>Location</th>
+              <th>Rate / Hr</th>
+              <th>Status</th>
+              <th>Visibility</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-props-tbody">
+            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading properties...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 2: User Management -->
+    <div id="tab-users" class="tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;">User Accounts & Moderation</h3>
+        <div style="display: flex; gap: 10px;">
+          <select id="user-filter-role" class="form-control" style="width: 160px;" onchange="loadAdminUsers()">
+            <option value="all">All Roles</option>
+            <option value="owner">Owners</option>
+            <option value="customer">Creators</option>
+          </select>
+          <select id="user-filter-status" class="form-control" style="width: 160px;" onchange="loadAdminUsers()">
+            <option value="all">All Statuses</option>
+            <option value="pending" selected>Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Role</th>
+              <th>Approval</th>
+              <th>Account State</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody">
+            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 3: Customer Bookings -->
+    <div id="tab-bookings" class="tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 700;">Master Bookings Ledger</h3>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="booking-search-input" class="form-control" placeholder="Search by booking code..." style="width: 220px;" oninput="loadAdminBookings()">
+          <select id="booking-status-filter" class="form-control" style="width: 180px;" onchange="loadAdminBookings()">
+            <option value="all">All Statuses</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="completed">Completed</option>
+            <option value="pending_owner">Pending Owner</option>
+            <option value="hold">Active Hold</option>
+            <option value="cancelled_by_customer">Cancelled</option>
+            <option value="refunded">Refunded</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Property</th>
+              <th>Customer</th>
+              <th>Category</th>
+              <th>Hours</th>
+              <th>Total (INR)</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="admin-bookings-tbody">
+            <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading bookings...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 4: Financial Reports & Analytics -->
+    <div id="tab-reports" class="tab-pane">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700;">Revenue & Marketplace Analytics</h3>
+        <a href="/api/v1/admin/reports/export-csv" class="btn btn-secondary">
+          📥 Export Complete Ledger (CSV)
+        </a>
+      </div>
+
+      <!-- Charts Row -->
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 30px;">
+        <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px;">
+          <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 14px;">Monthly Revenue Growth (INR)</h4>
+          <canvas id="revenueChart" height="140"></canvas>
+        </div>
+        <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px;">
+          <h4 style="font-size: 15px; font-weight: 700; margin-bottom: 14px;">Bookings by Status</h4>
+          <canvas id="statusChart" height="140"></canvas>
+        </div>
+      </div>
+
+      <!-- Top Locations Table -->
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 20px;">
+        <h4 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">Top Performing Shoot Locations</h4>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Location Name</th>
+                <th>City</th>
+                <th>Total Bookings</th>
+                <th>Gross Revenue Generated</th>
+              </tr>
+            </thead>
+            <tbody id="top-locations-tbody">
+              <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">Loading analytics...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejection Modal -->
+  <div id="rejection-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title" id="rejection-title">Rejection Reason</h3>
+        <button class="modal-close" onclick="closeRejectionModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Explain why this submission was rejected *</label>
+        <textarea id="rejection-reason-input" class="form-control" rows="3" placeholder="e.g. Incomplete address, blurry photos, invalid phone number..."></textarea>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 16px;">
+        <button class="btn btn-secondary" onclick="closeRejectionModal()">Cancel</button>
+        <button class="btn btn-danger" onclick="submitRejection()">Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    let rejectionCallback = null;
+    let revChartInstance = null;
+    let statusChartInstance = null;
+
+    function switchAdminTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      if (tab === 'reports') {
+        loadAdminReports();
+      }
+    }
+
+    async function loadAdminPortal() {
+      const user = getStoredUser();
+      if (!user || user.role !== 'admin') {
+        showToast('Admin privilege required.', 'error');
+        setTimeout(() => window.location.href = '/login.html', 1000);
+        return;
+      }
+
+      // Dynamic header date
+      const now = new Date();
+      document.getElementById('dynamic-header-date').innerText = now.toLocaleDateString('en-IN', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+
+      try {
+        const stats = await apiFetch('/admin/stats');
+        document.getElementById('adm-stat-users').innerText = stats.total_users;
+        document.getElementById('adm-pending-users-label').innerText = `${stats.pending_users} pending review`;
+        document.getElementById('badge-user-count').innerText = stats.pending_users;
+
+        document.getElementById('adm-stat-props').innerText = stats.total_properties;
+        document.getElementById('adm-pending-props-label').innerText = `${stats.pending_properties} pending approval`;
+        document.getElementById('badge-prop-count').innerText = stats.pending_properties;
+
+        document.getElementById('adm-stat-bookings').innerText = stats.total_bookings;
+        document.getElementById('adm-confirmed-bookings-label').innerText = `${stats.confirmed_bookings} confirmed/completed`;
+
+        document.getElementById('adm-stat-revenue').innerText = formatINR(stats.total_revenue);
+        document.getElementById('adm-platform-fee-label').innerText = `${formatINR(stats.platform_earnings)} net commission`;
+
+        loadAdminProperties();
+        loadAdminUsers();
+        loadAdminBookings();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    // Tab 1: Properties
+    async function loadAdminProperties() {
+      const status = document.getElementById('prop-filter-status').value;
+      const tbody = document.getElementById('admin-props-tbody');
+      try {
+        const props = await apiFetch(`/admin/properties?status=${status}`);
+        if (!props || props.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">No properties found for this filter.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = props.map(p => `
+          <tr>
+            <td>#${p.id}</td>
+            <td>
+              <div style="font-weight: 700;">${p.name}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${p.categories.join(', ')}</div>
+            </td>
+            <td>
+              <div>${p.owner_name}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${p.owner_email}</div>
+            </td>
+            <td>${p.area}, ${p.city}</td>
+            <td style="font-weight: 700;">${formatINR(p.hourly_price)}</td>
+            <td><span class="status-badge status-${p.approval_status}">${p.approval_status}</span></td>
+            <td>
+              ${p.is_published 
+                ? '<button class="btn btn-secondary btn-sm" onclick="unpublishProperty(' + p.id + ')">Unpublish</button>' 
+                : '<button class="btn btn-secondary btn-sm" onclick="publishProperty(' + p.id + ')">Publish</button>'
+              }
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                ${p.approval_status === 'pending' ? `
+                  <button class="btn btn-success btn-sm" onclick="approveProperty(${p.id})">Approve</button>
+                  <button class="btn btn-danger btn-sm" onclick="openRejectModal('Property', () => rejectProperty(${p.id}))">Reject</button>
+                ` : `
+                  <a href="/property.html?id=${p.id}" target="_blank" class="btn btn-secondary btn-sm">View</a>
+                `}
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color: var(--danger); text-align: center;">${e.message}</td></tr>`;
+      }
+    }
+
+    async function approveProperty(id) {
+      try {
+        await apiFetch(`/admin/properties/${id}/approve`, { method: 'POST' });
+        showToast('Property approved and published!', 'success');
+        loadAdminPortal();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function rejectProperty(id, reason) {
+      try {
+        await apiFetch(`/admin/properties/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason: reason })
+        });
+        showToast('Property rejected.', 'info');
+        loadAdminPortal();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function publishProperty(id) {
+      try {
+        await apiFetch(`/admin/properties/${id}/publish`, { method: 'POST' });
+        showToast('Property published.', 'success');
+        loadAdminProperties();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function unpublishProperty(id) {
+      try {
+        await apiFetch(`/admin/properties/${id}/unpublish`, { method: 'POST' });
+        showToast('Property unpublished.', 'info');
+        loadAdminProperties();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    // Tab 2: Users
+    async function loadAdminUsers() {
+      const role = document.getElementById('user-filter-role').value;
+      const status = document.getElementById('user-filter-status').value;
+      const tbody = document.getElementById('admin-users-tbody');
+
+      try {
+        const users = await apiFetch(`/admin/users?role=${role}&status=${status}`);
+        if (!users || users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">No users matching filter.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td>#${u.id}</td>
+            <td style="font-weight: 700;">${u.name}</td>
+            <td>${u.email}</td>
+            <td>${u.phone || 'N/A'}</td>
+            <td><span style="font-weight: 600; text-transform: capitalize;">${u.role}</span></td>
+            <td><span class="status-badge status-${u.approval_status}">${u.approval_status}</span></td>
+            <td>
+              ${u.is_active ? '<span class="status-badge status-active">Active</span>' : '<span class="status-badge status-rejected">Suspended</span>'}
+            </td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                ${u.approval_status === 'pending' ? `
+                  <button class="btn btn-success btn-sm" onclick="approveUser(${u.id})">Approve</button>
+                  <button class="btn btn-danger btn-sm" onclick="openRejectModal('User', () => rejectUser(${u.id}))">Reject</button>
+                ` : `
+                  ${u.is_active 
+                    ? `<button class="btn btn-danger btn-sm" onclick="suspendUser(${u.id})">Suspend</button>` 
+                    : `<button class="btn btn-success btn-sm" onclick="activateUser(${u.id})">Activate</button>`
+                  }
+                `}
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color: var(--danger); text-align: center;">${e.message}</td></tr>`;
+      }
+    }
+
+    async function approveUser(id) {
+      try {
+        await apiFetch(`/admin/users/${id}/approve`, { method: 'POST' });
+        showToast('User approved!', 'success');
+        loadAdminPortal();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function rejectUser(id, reason) {
+      try {
+        await apiFetch(`/admin/users/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason: reason })
+        });
+        showToast('User rejected.', 'info');
+        loadAdminPortal();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function suspendUser(id) {
+      try {
+        await apiFetch(`/admin/users/${id}/suspend`, { method: 'POST' });
+        showToast('User suspended.', 'info');
+        loadAdminUsers();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    async function activateUser(id) {
+      try {
+        await apiFetch(`/admin/users/${id}/activate`, { method: 'POST' });
+        showToast('User activated.', 'success');
+        loadAdminUsers();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    // Tab 3: Bookings
+    async function loadAdminBookings() {
+      const q = document.getElementById('booking-search-input').value.trim();
+      const status = document.getElementById('booking-status-filter').value;
+      const tbody = document.getElementById('admin-bookings-tbody');
+
+      try {
+        const bookings = await apiFetch(`/admin/bookings?status=${status}&q=${q}`);
+        if (!bookings || bookings.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">No bookings found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = bookings.map(b => `
+          <tr>
+            <td style="font-weight: 800; color: var(--primary);">${b.booking_code}</td>
+            <td>${b.property_name}</td>
+            <td>
+              <div>${b.customer_name}</div>
+              <div style="font-size: 11px; color: var(--text-muted);">${b.customer_email}</div>
+            </td>
+            <td>${b.shoot_category}</td>
+            <td>${b.duration_hours}h</td>
+            <td style="font-weight: 700;">${formatINR(b.total_amount)}</td>
+            <td><span class="status-badge status-${b.status}">${b.status.replace('_', ' ')}</span></td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <a href="/booking-detail.html?id=${b.id}" class="btn btn-secondary btn-sm">Details</a>
+                ${(b.status === 'confirmed' || b.status === 'pending_owner') ? `
+                  <button class="btn btn-danger btn-sm" onclick="adminForceRefund(${b.id})">Force Refund</button>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="8" style="color: var(--danger); text-align: center;">${e.message}</td></tr>`;
+      }
+    }
+
+    async function adminForceRefund(id) {
+      const reason = prompt('Admin reason for force-refunding this booking:');
+      if (reason === null) return;
+      try {
+        const res = await apiFetch(`/admin/bookings/${id}/refund`, {
+          method: 'POST',
+          body: JSON.stringify({ reason: reason || 'Admin override cancellation' })
+        });
+        showToast(`Full refund of ${formatINR(res.refund_amount)} issued by Admin.`, 'success');
+        loadAdminPortal();
+      } catch (e) { showToast(e.message, 'error'); }
+    }
+
+    // Tab 4: Reports & Analytics
+    async function loadAdminReports() {
+      try {
+        const data = await apiFetch('/admin/reports');
+
+        // Render Top Locations Table
+        const topTbody = document.getElementById('top-locations-tbody');
+        topTbody.innerHTML = (data.top_locations || []).map(loc => `
+          <tr>
+            <td style="font-weight: 700;">${loc.name}</td>
+            <td>${loc.city}</td>
+            <td>${loc.bookings_count} Shoots</td>
+            <td style="font-weight: 700; color: var(--primary);">${formatINR(loc.revenue)}</td>
+          </tr>
+        `).join('');
+
+        // Render Monthly Bar Chart
+        if (window.Chart) {
+          const revCtx = document.getElementById('revenueChart').getContext('2d');
+          if (revChartInstance) revChartInstance.destroy();
+          revChartInstance = new Chart(revCtx, {
+            type: 'bar',
+            data: {
+              labels: (data.monthly_revenue || []).map(m => m.month),
+              datasets: [{
+                label: 'Gross Revenue (INR)',
+                data: (data.monthly_revenue || []).map(m => m.revenue),
+                backgroundColor: '#4F46E5',
+                borderRadius: 6
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { display: false } },
+              scales: { y: { beginAtZero: true } }
+            }
+          });
+
+          // Render Status Doughnut Chart
+          const stCtx = document.getElementById('statusChart').getContext('2d');
+          if (statusChartInstance) statusChartInstance.destroy();
+          const statuses = Object.keys(data.bookings_by_status || {});
+          const counts = Object.values(data.bookings_by_status || {});
+          statusChartInstance = new Chart(stCtx, {
+            type: 'doughnut',
+            data: {
+              labels: statuses.map(s => s.replace('_', ' ')),
+              datasets: [{
+                data: counts,
+                backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: { legend: { position: 'bottom' } }
+            }
+          });
+        }
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    // Rejection Modal
+    function openRejectModal(type, callback) {
+      document.getElementById('rejection-title').innerText = `Reject ${type}`;
+      document.getElementById('rejection-reason-input').value = '';
+      rejectionCallback = callback;
+      document.getElementById('rejection-modal').classList.add('active');
+    }
+
+    function closeRejectionModal() {
+      document.getElementById('rejection-modal').classList.remove('active');
+      rejectionCallback = null;
+    }
+
+    function submitRejection() {
+      const reason = document.getElementById('rejection-reason-input').value.trim();
+      if (!reason) {
+        showToast('Please provide a reason.', 'error');
+        return;
+      }
+      closeRejectionModal();
+      if (rejectionCallback) rejectionCallback(reason);
+    }
+
+    document.addEventListener('DOMContentLoaded', loadAdminPortal);
+  </script>
+</body>
+</html>

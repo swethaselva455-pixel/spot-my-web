@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Home — {{ config.BUSINESS_NAME }}{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">THE RIGHT SPACE CHANGES EVERYTHING</p>
+  <h1>Book Exclusive Studios & Shoot Spaces</h1>
+  <p>Reserve private villas, natural light lofts, cyclorama stages, and scenic outdoor estates with live calendar availability and instant confirmation.</p>
+  <div class="hero-cta">
+    <a href="{{ url_for('book_page') }}" class="btn btn-primary" style="background:#2563eb; color:#ffffff; font-size:1.05rem; padding:0.8rem 1.75rem;">📅 Book a Slot Now</a>
+    <a href="{{ url_for('services_page') }}" class="btn btn-outline" style="color:#ffffff; border-color:rgba(255,255,255,0.3); font-size:1.05rem; padding:0.8rem 1.75rem;">Explore All Spaces →</a>
+  </div>
+</section>
+
+<section>
+  <div class="section-head">
+    <div>
+      <h2>Handpicked Shoot Locations</h2>
+      <p>Verified venues equipped with lighting grids, vanity suites, and dedicated power backups.</p>
+    </div>
+    <a href="{{ url_for('services_page') }}" class="btn btn-outline btn-sm">View All Locations ({{ services|length }})</a>
+  </div>
+
+  <div class="cards-grid">
+    {% for s in services[:6] %}
+      <div class="card">
+        <div class="card-img-wrap">
+          <img src="{{ s.image_url }}" alt="{{ s.name }}" loading="lazy">
+          <span class="card-badge">{{ s.category }}</span>
+        </div>
+        <div class="card-body">
+          <h3 class="card-title">{{ s.name }}</h3>
+          <p class="card-desc">{{ s.description }}</p>
+          <div class="card-footer">
+            <div class="card-price">
+              {{ config.CURRENCY_SYMBOL }}{{ "%.0f"|format(s.price) }}
+              <small>/ {{ s.duration_hours }} hr session</small>
+            </div>
+            <a href="{{ url_for('book_page', service_id=s.id) }}" class="btn btn-primary btn-sm">Book Space</a>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<section style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:3rem 2rem; margin:3rem 0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+  <div style="text-align:center; max-width:600px; margin:0 auto 2.5rem;">
+    <h2 style="font-size:1.85rem; margin-bottom:0.5rem;">How Seamless Booking Works</h2>
+    <p style="color:#64748b;">No more back-and-forth phone calls or double bookings. Everything is automated in real-time.</p>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <h3>Choose Space & Date</h3>
+      <p>Pick your preferred creative setting and view live real-time available time slots on our calendar.</p>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <h3>10-Minute Hold Lock</h3>
+      <p>Once you select a slot, it is locked exclusively for you for 10 minutes so no one else can book it while you check out.</p>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <h3>Secure Razorpay Pay</h3>
+      <p>Complete payment smoothly via UPI, Cards, NetBanking, or Razorpay Test Sandbox with server signature validation.</p>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <h3>Instant Confirmation</h3>
+      <p>Receive your booking ID receipt instantly, followed by automated reminder emails 24 hours and 1 hour before your shoot.</p>
+    </div>
+  </div>
+</section>
+
+<section style="display:flex; justify-content:space-between; align-items:center; background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:1.5rem 2rem; flex-wrap:wrap; gap:1rem;">
+  <div>
+    <h3 style="color:#1e40af; margin-bottom:0.25rem;">Hassle-Free Cancellation Policy</h3>
+    <p style="color:#1e3a8a; font-size:0.95rem;">Cancel up to 24 hours before your slot for a 100% full automated refund. Cancel within 24 hours for a 50% refund.</p>
+  </div>
+  <a href="{{ url_for('my_booking_page') }}" class="btn btn-outline" style="background:#ffffff; border-color:#93c5fd; color:#1e40af;">Manage Existing Booking →</a>
+</section>
+{% endblock %}

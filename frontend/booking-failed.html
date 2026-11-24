@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Incomplete | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="header"></header>
+
+  <div class="container" style="max-width: 580px; padding-top: 60px; padding-bottom: 70px; text-align: center;">
+    <div style="width: 72px; height: 72px; background: #FEE2E2; color: #DC2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 20px;">
+      ✕
+    </div>
+
+    <h1 style="font-size: 26px; font-weight: 800; margin-bottom: 10px;">Payment Was Not Completed</h1>
+    <p id="fail-reason" style="color: var(--text-muted); font-size: 15px; margin-bottom: 24px;">
+      The transaction could not be processed by the payment gateway or was declined.
+    </p>
+
+    <div class="alert alert-warning" style="text-align: left; margin-bottom: 24px;">
+      <div>
+        <strong>Hold Status:</strong> If your 10-minute reservation hold has not expired yet, your shoot slot is still reserved. You can retry with another payment method (UPI, different card, or NetBanking).
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <a id="btn-retry-pay" href="/checkout.html" class="btn btn-primary btn-lg">
+        Retry Payment &rarr;
+      </a>
+      <a href="/locations.html" class="btn btn-secondary btn-lg">
+        Browse Other Spaces
+      </a>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      const bId = params.get('booking_id');
+      const reason = params.get('reason');
+
+      if (reason) {
+        document.getElementById('fail-reason').innerText = decodeURIComponent(reason);
+      }
+      if (bId) {
+        document.getElementById('btn-retry-pay').href = `/checkout.html?booking_id=${bId}`;
+      }
+    });
+  </script>
+</body>
+</html>

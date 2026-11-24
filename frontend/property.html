@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shoot Location Details | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .prop-layout {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 36px;
+      margin-top: 24px;
+    }
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 12px;
+      height: 380px;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .gallery-main {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .gallery-subs {
+      display: grid;
+      grid-template-rows: 1fr 1fr;
+      gap: 12px;
+      height: 100%;
+    }
+    .gallery-sub {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .booking-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      position: sticky;
+      top: 96px;
+    }
+    .slot-pill {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .slot-pill:hover:not(.disabled) {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    .slot-pill.selected {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .slot-pill.disabled {
+      background: #F1F5F9;
+      color: #94A3B8;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .amenities-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .amenity-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: var(--text-main);
+    }
+    @media (max-width: 900px) {
+      .prop-layout {
+        grid-template-columns: 1fr;
+      }
+      .booking-card {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header"></header>
+
+  <div class="container" style="padding-top: 24px; padding-bottom: 60px;">
+    <!-- Breadcrumb -->
+    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+      <a href="/locations.html" style="color: var(--primary); font-weight: 600;">&larr; Back to all locations</a>
+    </div>
+
+    <!-- Title & Location Header -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+      <div>
+        <h1 id="prop-name" style="font-size: 32px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px;">Loading location...</h1>
+        <div style="display: flex; gap: 16px; align-items: center; font-size: 14px; color: var(--text-muted);">
+          <span id="prop-location">📍 Loading location...</span>
+          <span>&bull;</span>
+          <span id="prop-rating" style="color: #B45309; font-weight: 700;">★ 0.0</span>
+          <span>&bull;</span>
+          <span id="prop-type-badge" class="status-badge status-active">Type</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Photo Gallery -->
+    <div class="gallery-grid" id="prop-gallery">
+      <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80" class="gallery-main" alt="Main cover">
+      <div class="gallery-subs">
+        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80" class="gallery-sub" alt="Sub 1">
+        <img src="https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=600&q=80" class="gallery-sub" alt="Sub 2">
+      </div>
+    </div>
+
+    <!-- Main Content & Booking Form Layout -->
+    <div class="prop-layout">
+      <!-- Left Column: Details -->
+      <div>
+        <!-- Hosted by -->
+        <div style="display: flex; align-items: center; gap: 14px; padding: 18px 0; border-bottom: 1px solid var(--border);">
+          <div class="user-avatar" id="host-avatar" style="width: 48px; height: 48px; font-size: 18px;">H</div>
+          <div>
+            <div style="font-weight: 700; font-size: 16px;" id="host-name">Hosted by Verified Owner</div>
+            <div style="font-size: 12px; color: var(--text-muted);">SpotMyShoot Verified Host &bull; Identity & Property Confirmed</div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div style="padding: 24px 0; border-bottom: 1px solid var(--border);">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">About the Space</h3>
+          <p id="prop-description" style="color: var(--text-main); font-size: 15px; line-height: 1.6; white-space: pre-line;">Loading description...</p>
+        </div>
+
+        <!-- Suitable Categories -->
+        <div style="padding: 24px 0; border-bottom: 1px solid var(--border);">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">Ideal For Shoot Categories</h3>
+          <div id="prop-categories" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+        </div>
+
+        <!-- Amenities -->
+        <div style="padding: 24px 0; border-bottom: 1px solid var(--border);">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Production Amenities</h3>
+          <div class="amenities-list" id="prop-amenities"></div>
+        </div>
+
+        <!-- Location Rules -->
+        <div style="padding: 24px 0; border-bottom: 1px solid var(--border);">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">House & Shoot Rules</h3>
+          <p id="prop-rules" style="color: var(--text-muted); font-size: 14px; line-height: 1.5;">Standard respectful shoot rules apply.</p>
+        </div>
+
+        <!-- Cancellation Policy -->
+        <div style="padding: 24px 0; border-bottom: 1px solid var(--border);">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Cancellation Policy</h3>
+          <div id="prop-policy-card" class="alert alert-info">
+            <div id="prop-policy-text">
+              <strong>Moderate Policy:</strong> Full refund if cancelled 72+ hours before shoot. 50% refund between 24-72 hours. Non-refundable under 24 hours.
+            </div>
+          </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <div style="padding: 24px 0;">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Creator Reviews</h3>
+          <div id="prop-reviews-container">
+            <p style="color: var(--text-muted); font-size: 14px;">Loading reviews...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Booking Widget -->
+      <div>
+        <div class="booking-card">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; border-bottom: 1px solid var(--border); padding-bottom: 14px;">
+            <div>
+              <span id="prop-hourly-price" style="font-size: 26px; font-weight: 800; color: var(--text-main);">₹0</span>
+              <span style="font-size: 13px; color: var(--text-muted);">/ hour</span>
+            </div>
+            <div id="prop-min-hours" style="font-size: 12px; font-weight: 600; color: var(--primary);">Min 2 hours</div>
+          </div>
+
+          <!-- Step 1: Category -->
+          <div class="form-group">
+            <label class="form-label">Shoot Category</label>
+            <select id="book-category" class="form-control">
+              <option value="Pre-wedding">Pre-wedding</option>
+              <option value="Fashion">Fashion Shoot</option>
+              <option value="Cinematography">Cinematography / Music Video</option>
+              <option value="Reels">Instagram Reels / Short Form</option>
+              <option value="Maternity">Maternity Portraits</option>
+              <option value="Wedding">Wedding Functions</option>
+            </select>
+          </div>
+
+          <!-- Step 2: Date Picker -->
+          <div class="form-group">
+            <label class="form-label">Select Date</label>
+            <input type="date" id="book-date" class="form-control">
+          </div>
+
+          <!-- Step 3: Start Time Slots -->
+          <div class="form-group">
+            <label class="form-label">Select Available Start Time</label>
+            <div id="slots-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-height: 180px; overflow-y: auto; padding: 4px;">
+              <div style="grid-column: 1 / -1; font-size: 13px; color: var(--text-muted); text-align: center; padding: 12px;">
+                Pick a date above to load live slots
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Duration -->
+          <div class="form-group">
+            <label class="form-label">Shoot Duration (Hours)</label>
+            <select id="book-duration" class="form-control">
+              <option value="2">2 Hours</option>
+              <option value="3">3 Hours</option>
+              <option value="4">4 Hours</option>
+              <option value="6">6 Hours (Half Day)</option>
+              <option value="8">8 Hours (Full Day)</option>
+            </select>
+          </div>
+
+          <!-- Step 5: Crew Size -->
+          <div class="form-group">
+            <label class="form-label">Total Crew & Cast Size</label>
+            <input type="number" id="book-crew" class="form-control" value="5" min="1" max="50">
+            <small id="crew-limit-text" style="font-size: 11px; color: var(--text-muted);">Max crew limit: 25</small>
+          </div>
+
+          <!-- Special Requests -->
+          <div class="form-group">
+            <label class="form-label">Special Requests (Optional)</label>
+            <textarea id="book-requests" class="form-control" rows="2" placeholder="e.g. Wardrobe rack required, drone shoot planned..."></textarea>
+          </div>
+
+          <!-- Price Quote Breakdown -->
+          <div id="quote-breakdown" style="background: #F8FAFC; border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+              <span id="quote-subtotal-label">Rental (2 hrs × ₹0)</span>
+              <span id="quote-subtotal-val" style="font-weight: 600;">₹0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px;">
+              <span>GST Tax (18%)</span>
+              <span id="quote-gst-val" style="font-weight: 600;">₹0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px;">
+              <span>Platform Protection Fee (10%)</span>
+              <span id="quote-fee-val" style="font-weight: 600;">₹0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: 800; border-top: 1px solid var(--border); padding-top: 8px;">
+              <span>Estimated Total</span>
+              <span id="quote-total-val" style="color: var(--primary);">₹0</span>
+            </div>
+          </div>
+
+          <!-- Request Booking Button -->
+          <button id="btn-request-booking" class="btn btn-primary btn-block btn-lg" onclick="handleBookingRequest()">
+            Request Booking &rarr;
+          </button>
+          <div style="text-align: center; font-size: 11px; color: var(--text-muted); margin-top: 10px;">
+            🔒 10-minute hold guaranteed upon checkout &bull; No charge until payment
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    let currentProp = null;
+    let selectedStartTime = null;
+
+    function getPropId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    async function loadPropertyDetails() {
+      const id = getPropId();
+      if (!id) {
+        showToast('No property ID specified.', 'error');
+        setTimeout(() => window.location.href = '/locations.html', 1000);
+        return;
+      }
+
+      try {
+        currentProp = await apiFetch(`/properties/${id}`);
+        renderPropertyInfo(currentProp);
+        loadReviews(id);
+
+        // Set date picker bounds
+        const today = new Date().toISOString().split('T')[0];
+        const dateInput = document.getElementById('book-date');
+        dateInput.min = today;
+        
+        // Check if date was passed in URL query
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('date')) {
+          dateInput.value = urlParams.get('date');
+        } else {
+          // Default to tomorrow
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          dateInput.value = tomorrow.toISOString().split('T')[0];
+        }
+
+        // Populate duration dropdown based on property min/max hours
+        const durSelect = document.getElementById('book-duration');
+        durSelect.innerHTML = '';
+        for (let h = currentProp.min_hours; h <= Math.min(12, currentProp.max_hours); h++) {
+          const opt = document.createElement('option');
+          opt.value = h;
+          opt.innerText = `${h} Hours${h >= 8 ? ' (Full Day)' : ''}`;
+          durSelect.appendChild(opt);
+        }
+
+        // Set crew limit max
+        document.getElementById('book-crew').max = currentProp.max_crew_size;
+        document.getElementById('crew-limit-text').innerText = `Max crew limit: ${currentProp.max_crew_size}`;
+
+        // Fetch live availability slots
+        loadAvailabilitySlots();
+        fetchQuote();
+
+      } catch (e) {
+        document.getElementById('prop-name').innerText = 'Location Not Found';
+        showToast(e.message, 'error');
+      }
+    }
+
+    function renderPropertyInfo(p) {
+      document.title = `${p.name} | SpotMyShoot`;
+      document.getElementById('prop-name').innerText = p.name;
+      document.getElementById('prop-location').innerText = `📍 ${p.address || `${p.area}, ${p.city}`}`;
+      document.getElementById('prop-rating').innerText = p.avg_rating > 0 ? `★ ${p.avg_rating.toFixed(1)}` : '★ New Space';
+      document.getElementById('prop-type-badge').innerText = p.property_type.toUpperCase();
+
+      document.getElementById('host-name').innerText = `Hosted by ${p.owner_name || 'Verified Owner'}`;
+      document.getElementById('host-avatar').innerText = (p.owner_name || 'O').charAt(0).toUpperCase();
+
+      document.getElementById('prop-description').innerText = p.description || 'No description provided.';
+      document.getElementById('prop-rules').innerText = p.rules_text || 'Standard respectful shoot rules apply. Clean up all props before leaving.';
+
+      document.getElementById('prop-hourly-price').innerText = formatINR(p.hourly_price);
+      document.getElementById('prop-min-hours').innerText = `Min ${p.min_hours} hours`;
+
+      // Render Categories
+      const catContainer = document.getElementById('prop-categories');
+      catContainer.innerHTML = (p.categories || []).map(c => `
+        <span class="cat-pill active">${c}</span>
+      `).join('');
+
+      // Render Amenities
+      const amenContainer = document.getElementById('prop-amenities');
+      amenContainer.innerHTML = (p.amenities || []).map(a => `
+        <div class="amenity-item"><span>✓</span> <span>${a}</span></div>
+      `).join('');
+
+      // Cancellation policy card
+      const policyCard = document.getElementById('prop-policy-text');
+      const pol = p.cancellation_policy.toLowerCase();
+      if (pol === 'flexible') {
+        policyCard.innerHTML = '<strong>Flexible Policy:</strong> Full refund if cancelled 24+ hours before shoot. 50% refund between 6-24 hours. Non-refundable under 6 hours.';
+      } else if (pol === 'strict') {
+        policyCard.innerHTML = '<strong>Strict Policy:</strong> 50% refund if cancelled 7+ days before shoot. Non-refundable under 7 days.';
+      } else {
+        policyCard.innerHTML = '<strong>Moderate Policy:</strong> Full refund if cancelled 72+ hours before shoot. 50% refund between 24-72 hours. Non-refundable under 24 hours.';
+      }
+
+      // Render Gallery
+      if (p.images && p.images.length > 0) {
+        const gal = document.getElementById('prop-gallery');
+        const main = p.images[0].url;
+        const sub1 = p.images[1] ? p.images[1].url : main;
+        const sub2 = p.images[2] ? p.images[2].url : (p.images[1] ? p.images[1].url : main);
+        gal.innerHTML = `
+          <img src="${main}" class="gallery-main" alt="Main Photo">
+          <div class="gallery-subs">
+            <img src="${sub1}" class="gallery-sub" alt="Sub 1">
+            <img src="${sub2}" class="gallery-sub" alt="Sub 2">
+          </div>
+        `;
+      }
+    }
+
+    async function loadReviews(propId) {
+      const container = document.getElementById('prop-reviews-container');
+      try {
+        const reviews = await apiFetch(`/properties/${propId}/reviews`);
+        if (!reviews || reviews.length === 0) {
+          container.innerHTML = '<p style="color: var(--text-muted); font-size: 14px;">No reviews yet. Be the first creator to book and review this location!</p>';
+          return;
+        }
+
+        container.innerHTML = reviews.map(r => `
+          <div style="border-bottom: 1px solid var(--border); padding-bottom: 14px; margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-weight: 700; font-size: 14px;">${r.customer_name}</span>
+              <span style="color: #B45309; font-weight: 700; font-size: 13px;">${'★'.repeat(r.rating)}</span>
+            </div>
+            <div style="font-size: 14px; color: var(--text-main); margin-bottom: 4px;">${r.comment || ''}</div>
+            <div style="font-size: 11px; color: #94A3B8;">${formatISTDate(r.created_at)}</div>
+          </div>
+        `).join('');
+      } catch (e) {
+        container.innerHTML = '<p style="color: var(--text-muted);">Could not load reviews.</p>';
+      }
+    }
+
+    async function loadAvailabilitySlots() {
+      const date = document.getElementById('book-date').value;
+      const slotsContainer = document.getElementById('slots-container');
+      if (!date || !currentProp) return;
+
+      slotsContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); font-size: 13px;">Checking slot availability...</div>';
+
+      try {
+        const res = await apiFetch(`/properties/${currentProp.id}/availability?date=${date}`);
+        const slots = res.slots || [];
+
+        if (slots.length === 0) {
+          slotsContainer.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; color: var(--danger); font-size: 13px;">No available hours on this date.</div>';
+          selectedStartTime = null;
+          return;
+        }
+
+        slotsContainer.innerHTML = '';
+        selectedStartTime = null;
+
+        slots.forEach(s => {
+          const pill = document.createElement('div');
+          pill.className = `slot-pill ${s.available ? '' : 'disabled'}`;
+          pill.innerText = s.time;
+          pill.title = s.available ? `Book from ${s.display}` : (s.reason || 'Unavailable');
+
+          if (s.available) {
+            pill.onclick = () => {
+              document.querySelectorAll('.slot-pill').forEach(el => el.classList.remove('selected'));
+              pill.classList.add('selected');
+              selectedStartTime = s.time;
+              fetchQuote();
+            };
+          }
+          slotsContainer.appendChild(pill);
+        });
+
+        // Auto select first available slot
+        const firstAvail = slots.find(s => s.available);
+        if (firstAvail) {
+          const firstPill = Array.from(slotsContainer.children).find(el => el.innerText === firstAvail.time);
+          if (firstPill) firstPill.click();
+        }
+
+      } catch (e) {
+        slotsContainer.innerHTML = `<div style="grid-column: 1 / -1; color: var(--danger); font-size: 13px;">Error: ${e.message}</div>`;
+      }
+    }
+
+    async function fetchQuote() {
+      if (!currentProp) return;
+      const date = document.getElementById('book-date').value;
+      const duration = parseInt(document.getElementById('book-duration').value, 10);
+      const startTime = selectedStartTime || '09:00';
+
+      try {
+        const quote = await apiFetch('/bookings/quote', {
+          method: 'POST',
+          body: JSON.stringify({
+            property_id: currentProp.id,
+            date: date,
+            start_time: startTime,
+            duration_hours: duration
+          })
+        });
+
+        document.getElementById('quote-subtotal-label').innerText = `Rental (${duration} hrs × ${formatINR(currentProp.hourly_price)})`;
+        document.getElementById('quote-subtotal-val').innerText = formatINR(quote.subtotal);
+        document.getElementById('quote-gst-val').innerText = formatINR(quote.gst_amount);
+        document.getElementById('quote-fee-val').innerText = formatINR(quote.platform_fee);
+        document.getElementById('quote-total-val').innerText = formatINR(quote.total_amount);
+
+      } catch (e) {
+        // Fallback calculation in UI
+        const sub = currentProp.hourly_price * duration;
+        const gst = Math.round(sub * 0.18);
+        const fee = Math.round(sub * 0.10);
+        document.getElementById('quote-subtotal-val').innerText = formatINR(sub);
+        document.getElementById('quote-gst-val').innerText = formatINR(gst);
+        document.getElementById('quote-fee-val').innerText = formatINR(fee);
+        document.getElementById('quote-total-val').innerText = formatINR(sub + gst + fee);
+      }
+    }
+
+    async function handleBookingRequest() {
+      const user = getStoredUser();
+      if (!user) {
+        showToast('Please log in to book this location.', 'info');
+        const returnUrl = encodeURIComponent(window.location.pathname + window.location.search);
+        setTimeout(() => window.location.href = `/login.html?redirect=${returnUrl}`, 1000);
+        return;
+      }
+
+      if (user.approval_status !== 'approved' && user.role !== 'admin') {
+        showToast(`Your account is currently '${user.approval_status}'. An admin must approve your profile before requesting shoots.`, 'error');
+        return;
+      }
+
+      if (!selectedStartTime) {
+        showToast('Please select an available start time slot.', 'error');
+        return;
+      }
+
+      const date = document.getElementById('book-date').value;
+      const category = document.getElementById('book-category').value;
+      const duration = parseInt(document.getElementById('book-duration').value, 10);
+      const crew = parseInt(document.getElementById('book-crew').value, 10);
+      const requests = document.getElementById('book-requests').value.trim();
+
+      const btn = document.getElementById('btn-request-booking');
+      btn.disabled = true;
+      btn.innerText = 'Creating 10-Minute Hold...';
+
+      try {
+        const booking = await apiFetch('/bookings', {
+          method: 'POST',
+          body: JSON.stringify({
+            property_id: currentProp.id,
+            shoot_category: category,
+            date: date,
+            start_time: selectedStartTime,
+            duration_hours: duration,
+            crew_size: crew,
+            special_requests: requests
+          })
+        });
+
+        showToast('Reservation hold created! Redirecting to checkout...', 'success');
+        setTimeout(() => {
+          window.location.href = `/checkout.html?booking_id=${booking.id}`;
+        }, 800);
+
+      } catch (e) {
+        showToast(e.message, 'error');
+        btn.disabled = false;
+        btn.innerText = 'Request Booking →';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadPropertyDetails();
+
+      document.getElementById('book-date').addEventListener('change', () => {
+        loadAvailabilitySlots();
+      });
+
+      document.getElementById('book-duration').addEventListener('change', () => {
+        fetchQuote();
+      });
+    });
+  </script>
+</body>
+</html>

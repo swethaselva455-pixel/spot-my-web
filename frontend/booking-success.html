@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booking Confirmed! | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="header"></header>
+
+  <div class="container" style="max-width: 680px; padding-top: 50px; padding-bottom: 70px; text-align: center;">
+    <div style="width: 72px; height: 72px; background: #D1FAE5; color: #059669; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; margin: 0 auto 20px;">
+      ✓
+    </div>
+
+    <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 8px;">Shoot Booking Confirmed!</h1>
+    <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 28px;">
+      Your payment was captured and your reservation has been recorded.
+    </p>
+
+    <!-- Details Card -->
+    <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; text-align: left; margin-bottom: 24px; box-shadow: var(--shadow-sm);">
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px;">
+        <div>
+          <div style="font-size: 12px; color: var(--text-muted); text-transform: uppercase;">Booking Code</div>
+          <div id="succ-code" style="font-size: 20px; font-weight: 800; color: var(--primary);">#SMS-0000</div>
+        </div>
+        <div id="succ-status-badge" class="status-badge status-confirmed">Confirmed</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px; margin-bottom: 16px;">
+        <div>
+          <div style="color: var(--text-muted); font-size: 12px;">Property</div>
+          <div id="succ-property" style="font-weight: 600;">Loading...</div>
+        </div>
+        <div>
+          <div style="color: var(--text-muted); font-size: 12px;">Category</div>
+          <div id="succ-category" style="font-weight: 600;">Loading...</div>
+        </div>
+        <div>
+          <div style="color: var(--text-muted); font-size: 12px;">Shoot Date</div>
+          <div id="succ-date" style="font-weight: 600;">Loading...</div>
+        </div>
+        <div>
+          <div style="color: var(--text-muted); font-size: 12px;">Timing</div>
+          <div id="succ-timing" style="font-weight: 600;">Loading...</div>
+        </div>
+      </div>
+
+      <div style="padding-top: 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 14px; color: var(--text-muted);">Amount Paid:</span>
+        <span id="succ-amount" style="font-size: 18px; font-weight: 800; color: var(--text-main);">₹0</span>
+      </div>
+    </div>
+
+    <!-- Shoot Checklist Alert -->
+    <div class="alert alert-info" style="text-align: left; margin-bottom: 28px;">
+      <div>
+        <strong>Creator Shoot Checklist:</strong>
+        <ul style="margin-left: 20px; margin-top: 6px; font-size: 13px;">
+          <li>Bring government photo ID for security gate access.</li>
+          <li>Ensure crew size does not exceed the agreed limit.</li>
+          <li>We will send reminders 24 hours and 2 hours before shoot start.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 12px; justify-content: center;">
+      <a id="btn-download-inv" href="#" target="_blank" class="btn btn-secondary btn-lg">
+        📄 Download GST Invoice (PDF)
+      </a>
+      <a href="/my-bookings.html" class="btn btn-primary btn-lg">
+        View in My Shoots &rarr;
+      </a>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    async function loadSuccessDetails() {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('booking_id');
+      if (!id) {
+        window.location.href = '/my-bookings.html';
+        return;
+      }
+
+      try {
+        const b = await apiFetch(`/bookings/${id}`);
+        document.getElementById('succ-code').innerText = b.booking_code;
+        document.getElementById('succ-property').innerText = b.property_name;
+        document.getElementById('succ-category').innerText = b.shoot_category;
+        document.getElementById('succ-date').innerText = formatISTDate(b.start_datetime);
+        document.getElementById('succ-timing').innerText = `${formatISTTime(b.start_datetime)} - ${formatISTTime(b.end_datetime)}`;
+        document.getElementById('succ-amount').innerText = formatINR(b.total_amount);
+
+        const badge = document.getElementById('succ-status-badge');
+        badge.className = `status-badge status-${b.status}`;
+        badge.innerText = b.status.replace('_', ' ').toUpperCase();
+
+        document.getElementById('btn-download-inv').href = `/api/v1/bookings/${b.id}/invoice`;
+
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadSuccessDetails);
+  </script>
+</body>
+</html>

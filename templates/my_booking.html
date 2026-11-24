@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}My Booking & Cancellation — {{ config.BUSINESS_NAME }}{% endblock %}
+
+{% block content %}
+<div style="max-width:750px; margin:0 auto;">
+  <div style="text-align:center; margin-bottom:2rem;">
+    <p style="color:#2563eb; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:0.85rem;">CUSTOMER SELF-SERVICE</p>
+    <h1>Find or Cancel Your Booking</h1>
+    <p style="color:#64748b;">Enter your booking reference and email address to view details or process an automated cancellation refund.</p>
+  </div>
+
+  <div class="form-card" style="margin-bottom:2rem;">
+    <form method="GET" action="{{ url_for('my_booking_page') }}" style="display:grid; grid-template-columns:1fr 1fr auto; gap:1rem; align-items:flex-end;">
+      <div class="form-group" style="margin:0;">
+        <label for="bookingId">Booking Reference *</label>
+        <input type="text" id="bookingId" name="booking_id" class="form-control" placeholder="e.g. SMS-CBA896" value="{{ search_id or '' }}" required>
+      </div>
+      <div class="form-group" style="margin:0;">
+        <label for="emailInput">Customer Email *</label>
+        <input type="email" id="emailInput" name="email" class="form-control" placeholder="e.g. rahul@example.com" value="{{ search_email or '' }}" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="height:42px;">Look Up</button>
+    </form>
+  </div>
+
+  {% if booking %}
+    <div class="form-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:1rem; margin-bottom:1.5rem;">
+        <div>
+          <span style="font-size:0.85rem; color:#64748b;">Booking ID</span>
+          <h2 style="font-size:1.5rem; color:#2563eb;">{{ booking.booking_reference }}</h2>
+        </div>
+        <div>
+          {% if booking.status == 'confirmed' %}
+            <span class="status-pill status-confirmed">Confirmed</span>
+          {% elif booking.status == 'cancelled' %}
+            <span class="status-pill status-cancelled">Cancelled</span>
+          {% else %}
+            <span class="status-pill status-pending">Pending</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <table class="receipt-table">
+        <tr>
+          <th>Shoot Space / Service</th>
+          <td><strong>{{ booking.service.name }}</strong></td>
+        </tr>
+        <tr>
+          <th>Scheduled Date</th>
+          <td>{{ booking.slot.slot_date.strftime('%A, %d %B %Y') }}</td>
+        </tr>
+        <tr>
+          <th>Time Window</th>
+          <td>{{ booking.slot.start_time }} &mdash; {{ booking.slot.end_time }}</td>
+        </tr>
+        <tr>
+          <th>Customer Name</th>
+          <td>{{ booking.customer_name }}</td>
+        </tr>
+        <tr>
+          <th>Total Amount</th>
+          <td>{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.total_amount) }}</td>
+        </tr>
+        {% if booking.status == 'cancelled' %}
+          <tr>
+            <th>Cancellation Date</th>
+            <td>{{ booking.cancelled_at.strftime('%d %b %Y, %H:%M UTC') if booking.cancelled_at else 'N/A' }}</td>
+          </tr>
+          <tr>
+            <th>Refund Amount Processed</th>
+            <td><strong style="color:#dc2626;">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.refund_amount) }}</strong></td>
+          </tr>
+          <tr>
+            <th>Cancellation Reason</th>
+            <td>{{ booking.cancellation_reason or 'Requested by user' }}</td>
+          </tr>
+        {% endif %}
+      </table>
+
+      {% if booking.status == 'confirmed' %}
+        <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:1.25rem; margin-top:2rem;">
+          <h3 style="color:#991b1b; font-size:1.05rem; margin-bottom:0.5rem;">Cancellation Policy & Instant Refund</h3>
+          <p style="font-size:0.85rem; color:#7f1d1d; margin-bottom:1rem;">
+            Current policy tier applied: <strong>{{ refund_tier_label }}</strong>.<br>
+            If you cancel now, an automatic refund of <strong>{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(refund_amount) }}</strong> will be issued to your payment source and this slot will be released.
+          </p>
+
+          <form method="POST" action="{{ url_for('cancel_booking_action') }}" onsubmit="return confirm('Are you sure you want to cancel this booking? An automatic refund will be processed per our policy.');">
+            <input type="hidden" name="booking_reference" value="{{ booking.booking_reference }}">
+            <input type="hidden" name="customer_email" value="{{ booking.customer_email }}">
+            <button type="submit" class="btn btn-danger">Cancel Booking & Process Refund</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  {% elif search_id %}
+    <div style="text-align:center; padding:3rem 1rem; color:#64748b; background:#ffffff; border-radius:8px; border:1px solid #e2e8f0;">
+      <p style="font-size:1.1rem; margin-bottom:0.5rem;">No booking found matching reference "<strong>{{ search_id }}</strong>" and email "<strong>{{ search_email }}</strong>".</p>
+      <p style="font-size:0.9rem;">Please verify your details and try again.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

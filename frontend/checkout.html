@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout & Payment | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <!-- Razorpay Checkout Script -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    .checkout-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 36px;
+      margin-top: 24px;
+    }
+    .checkout-box {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow-sm);
+    }
+    @media (max-width: 860px) {
+      .checkout-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header"></header>
+
+  <div class="container" style="padding-top: 30px; padding-bottom: 60px;">
+    <!-- 10-Minute Hold Countdown Banner -->
+    <div class="countdown-banner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">⏱️</span>
+        <span>Time Remaining to Complete Reservation:</span>
+      </div>
+      <div class="countdown-digits" id="hold-timer">10:00</div>
+    </div>
+
+    <div class="checkout-grid">
+      <!-- Left Column: Booking Details & Payment Options -->
+      <div>
+        <div class="checkout-box" style="margin-bottom: 24px;">
+          <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Shoot Reservation Review</h2>
+          
+          <div style="display: flex; gap: 16px; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border); margin-bottom: 20px;">
+            <img id="summary-img" src="" style="width: 100px; height: 75px; object-fit: cover; border-radius: var(--radius-md); background: #E2E8F0;" alt="Location">
+            <div>
+              <h3 id="summary-name" style="font-size: 17px; font-weight: 700;">Loading...</h3>
+              <div id="summary-location" style="font-size: 13px; color: var(--text-muted);">📍 Location</div>
+              <div id="summary-code" style="font-size: 12px; font-weight: 600; color: var(--primary); margin-top: 2px;">#SMS-0000</div>
+            </div>
+          </div>
+
+          <!-- Schedule Details Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; font-size: 14px;">
+            <div>
+              <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Date & Timing</div>
+              <div id="summary-timing" style="font-weight: 600;">Loading...</div>
+            </div>
+            <div>
+              <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Duration & Crew</div>
+              <div id="summary-duration" style="font-weight: 600;">Loading...</div>
+            </div>
+            <div>
+              <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Category</div>
+              <div id="summary-category" style="font-weight: 600;">Loading...</div>
+            </div>
+            <div>
+              <div style="color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Creator Details</div>
+              <div id="summary-creator" style="font-weight: 600;">Loading...</div>
+            </div>
+          </div>
+
+          <!-- Cancellation policy alert -->
+          <div class="alert alert-warning" style="margin-bottom: 0;">
+            <div style="font-size: 13px;">
+              <strong>Cancellation Policy:</strong> Free cancellation up to policy deadline. Automated refunds initiated via original payment method.
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms and Conditions Agreement -->
+        <div class="checkout-box">
+          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 14px;">Creator Agreement</h3>
+          <div style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+            By proceeding, you agree to abide by the property owner's shoot rules, keep within the booked duration, and leave the property in its original tidy condition. SpotMyShoot facilitates secure payment and dispute resolution.
+          </div>
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; cursor: pointer;">
+            <input type="checkbox" id="terms-agree" style="width: 18px; height: 18px;">
+            <span>I accept the House Rules, Cancellation Policy & Terms of Service</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Right Column: Price Summary & Pay Button -->
+      <div>
+        <div class="checkout-box" style="position: sticky; top: 96px;">
+          <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 20px;">Price Breakdown</h3>
+
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 12px;">
+            <span id="price-subtotal-label">Rental Hours</span>
+            <span id="price-subtotal" style="font-weight: 600;">₹0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 12px;">
+            <span>GST Tax (18%)</span>
+            <span id="price-gst" style="font-weight: 600;">₹0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 16px;">
+            <span>Platform Convenience Fee (10%)</span>
+            <span id="price-fee" style="font-weight: 600;">₹0</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: 800; border-top: 2px solid var(--border); padding-top: 16px; margin-bottom: 24px;">
+            <span>Total Payable</span>
+            <span id="price-total" style="color: var(--primary);">₹0</span>
+          </div>
+
+          <button id="btn-pay" class="btn btn-primary btn-block btn-lg" onclick="initiateRazorpayPayment()">
+            Pay ₹0 via Razorpay &rarr;
+          </button>
+
+          <div style="text-align: center; margin-top: 16px;">
+            <div style="display: flex; justify-content: center; gap: 12px; font-size: 12px; color: var(--text-muted);">
+              <span>💳 UPI</span>
+              <span>&bull;</span>
+              <span>Cards</span>
+              <span>&bull;</span>
+              <span>NetBanking</span>
+              <span>&bull;</span>
+              <span>Wallets</span>
+            </div>
+            <div style="font-size: 11px; color: #94A3B8; margin-top: 8px;">
+              256-bit SSL Encrypted &bull; Razorpay Verified Partner
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    let currentBooking = null;
+    let timerInterval = null;
+
+    function getBookingId() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('booking_id');
+    }
+
+    async function loadBookingDetails() {
+      const id = getBookingId();
+      if (!id) {
+        showToast('No booking ID specified.', 'error');
+        window.location.href = '/my-bookings.html';
+        return;
+      }
+
+      try {
+        currentBooking = await apiFetch(`/bookings/${id}`);
+        renderBookingSummary(currentBooking);
+        startHoldCountdown(currentBooking.hold_expires_at);
+      } catch (e) {
+        showToast(e.message, 'error');
+        setTimeout(() => window.location.href = '/locations.html', 1500);
+      }
+    }
+
+    function renderBookingSummary(b) {
+      document.getElementById('summary-name').innerText = b.property_name;
+      document.getElementById('summary-location').innerText = `📍 ${b.property_area}, ${b.property_city}`;
+      document.getElementById('summary-code').innerText = b.booking_code;
+      if (b.property_cover_image) {
+        document.getElementById('summary-img').src = b.property_cover_image;
+      }
+
+      document.getElementById('summary-timing').innerText = `${formatISTDate(b.start_datetime)} (${formatISTTime(b.start_datetime)} - ${formatISTTime(b.end_datetime)})`;
+      document.getElementById('summary-duration').innerText = `${b.duration_hours} Hours &bull; ${b.crew_size} Crew members`;
+      document.getElementById('summary-category').innerText = b.shoot_category;
+      document.getElementById('summary-creator').innerText = `${b.customer_name} (${b.customer_email})`;
+
+      document.getElementById('price-subtotal-label').innerText = `Rental (${b.duration_hours} hrs)`;
+      document.getElementById('price-subtotal').innerText = formatINR(b.subtotal);
+      document.getElementById('price-gst').innerText = formatINR(b.gst_amount);
+      document.getElementById('price-fee').innerText = formatINR(b.platform_fee);
+      document.getElementById('price-total').innerText = formatINR(b.total_amount);
+
+      document.getElementById('btn-pay').innerText = `Pay ${formatINR(b.total_amount)} via Razorpay →`;
+    }
+
+    function startHoldCountdown(expiryIso) {
+      if (!expiryIso) return;
+      const expiry = new Date(expiryIso).getTime();
+
+      function update() {
+        const now = new Date().getTime();
+        const diff = expiry - now;
+
+        if (diff <= 0) {
+          clearInterval(timerInterval);
+          document.getElementById('hold-timer').innerText = 'EXPIRED';
+          showToast('Your reservation hold has expired. Returning to locations.', 'error');
+          setTimeout(() => window.location.href = '/locations.html', 2000);
+          return;
+        }
+
+        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+        document.getElementById('hold-timer').innerText = 
+          `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+
+      update();
+      timerInterval = setInterval(update, 1000);
+    }
+
+    async function initiateRazorpayPayment() {
+      const agree = document.getElementById('terms-agree').checked;
+      if (!agree) {
+        showToast('Please accept the Terms of Service to proceed.', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-pay');
+      btn.disabled = true;
+      btn.innerText = 'Initializing Razorpay...';
+
+      try {
+        const order = await apiFetch('/payments/create-order', {
+          method: 'POST',
+          body: JSON.stringify({ booking_id: currentBooking.id })
+        });
+
+        // Razorpay Checkout Configuration
+        const options = {
+          key: order.razorpay_key_id,
+          amount: order.amount,
+          currency: order.currency,
+          name: "SpotMyShoot",
+          description: `Shoot Booking ${order.booking_code} at ${order.property_name}`,
+          order_id: order.razorpay_order_id,
+          prefill: {
+            name: order.customer_name,
+            email: order.customer_email,
+            contact: order.customer_phone
+          },
+          theme: {
+            color: "#4F46E5"
+          },
+          handler: async function (response) {
+            btn.innerText = 'Verifying Payment...';
+            try {
+              const verifyRes = await apiFetch('/payments/verify', {
+                method: 'POST',
+                body: JSON.stringify({
+                  booking_id: currentBooking.id,
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature
+                })
+              });
+
+              showToast('Payment verified successfully!', 'success');
+              setTimeout(() => {
+                window.location.href = `/booking-success.html?booking_id=${currentBooking.id}`;
+              }, 800);
+            } catch (err) {
+              showToast(err.message, 'error');
+              window.location.href = `/booking-failed.html?booking_id=${currentBooking.id}&reason=${encodeURIComponent(err.message)}`;
+            }
+          },
+          modal: {
+            ondismiss: function () {
+              btn.disabled = false;
+              btn.innerText = `Pay ${formatINR(currentBooking.total_amount)} via Razorpay →`;
+              showToast('Payment window was closed. Hold is still active.', 'info');
+            }
+          }
+        };
+
+        // If Razorpay SDK loaded and valid key, open Razorpay Checkout
+        if (window.Razorpay && order.razorpay_key_id && !order.razorpay_key_id.startsWith('rzp_test_spotmyshoot')) {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        } else {
+          // Automatic Test Mode Simulated Gateway for frictionless local testing
+          console.log('[TEST MODE] Simulating Razorpay checkout flow with test keys');
+          simulateTestPayment(order);
+        }
+
+      } catch (e) {
+        showToast(e.message, 'error');
+        btn.disabled = false;
+        btn.innerText = `Pay ${formatINR(currentBooking.total_amount)} via Razorpay →`;
+      }
+    }
+
+    async function simulateTestPayment(order) {
+      const confirmPay = confirm(`[Razorpay Test Gateway]\nPay ${formatINR(order.amount / 100)} for ${order.booking_code}?\nClick OK to simulate successful payment.`);
+      if (!confirmPay) {
+        document.getElementById('btn-pay').disabled = false;
+        document.getElementById('btn-pay').innerText = `Pay ${formatINR(currentBooking.total_amount)} via Razorpay →`;
+        return;
+      }
+
+      try {
+        const dummyPaymentId = `pay_mock_${Date.now()}`;
+        const verifyRes = await apiFetch('/payments/verify', {
+          method: 'POST',
+          body: JSON.stringify({
+            booking_id: currentBooking.id,
+            razorpay_order_id: order.razorpay_order_id,
+            razorpay_payment_id: dummyPaymentId,
+            razorpay_signature: 'test_signature_valid'
+          })
+        });
+
+        showToast('Test payment captured and verified!', 'success');
+        setTimeout(() => {
+          window.location.href = `/booking-success.html?booking_id=${currentBooking.id}`;
+        }, 600);
+      } catch (err) {
+        showToast(err.message, 'error');
+        window.location.href = `/booking-failed.html?booking_id=${currentBooking.id}&reason=${encodeURIComponent(err.message)}`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadBookingDetails);
+  </script>
+</body>
+</html>

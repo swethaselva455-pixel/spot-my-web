@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Book a Shoot Slot — {{ config.BUSINESS_NAME }}{% endblock %}
+
+{% block content %}
+<div style="max-width:800px; margin:0 auto;">
+  <div style="text-align:center; margin-bottom:2rem;">
+    <p style="color:#2563eb; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:0.85rem;">LIVE AVAILABILITY CALENDAR</p>
+    <h1>Reserve Your Shoot Space</h1>
+    <p style="color:#64748b;">Select your desired space and date. Available slots update dynamically in real time.</p>
+  </div>
+
+  <form method="POST" action="{{ url_for('initiate_booking') }}" class="form-card" id="bookingForm">
+    <div class="form-group">
+      <label for="serviceSelect">1. Choose Location / Service *</label>
+      <select id="serviceSelect" name="service_id" class="form-control" required>
+        <option value="">-- Select a Shoot Location --</option>
+        {% for s in services %}
+          <option value="{{ s.id }}" {% if selected_service_id == s.id %}selected{% endif %}>
+            {{ s.name }} ({{ s.category }}) — {{ config.CURRENCY_SYMBOL }}{{ "%.0f"|format(s.price) }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="bookingDate">2. Select Shoot Date *</label>
+      <div id="quickDateStrip" style="display:flex; gap:0.5rem; overflow-x:auto; padding-bottom:0.5rem; margin-bottom:0.75rem;"></div>
+      <input type="date" id="bookingDate" name="date" class="form-control" min="{{ min_date }}" max="{{ max_date }}" value="{{ min_date }}" required>
+    </div>
+
+    <div class="form-group">
+      <label>3. Select Available Time Slot *</label>
+      <p style="font-size:0.8rem; color:#64748b; margin-bottom:0.5rem;">Click an open slot to select it. Full or blocked slots are disabled automatically.</p>
+      <div id="slotsContainer" class="slots-container">
+        <div style="padding:1rem; color:#64748b;">Loading available slots for today...</div>
+      </div>
+      <input type="hidden" name="slot_id" id="selectedSlotId" required>
+    </div>
+
+    <hr style="border:none; border-top:1px solid #e2e8f0; margin:1.75rem 0;">
+
+    <h3 style="margin-bottom:1rem; font-size:1.15rem;">4. Creator & Crew Details</h3>
+
+    <div class="form-group">
+      <label for="customerName">Full Name / Studio Name *</label>
+      <input type="text" id="customerName" name="customer_name" class="form-control" placeholder="e.g. Ananya Rao / Studio Lumina" required>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label for="customerEmail">Email Address (for instant receipt & reminders) *</label>
+        <input type="email" id="customerEmail" name="customer_email" class="form-control" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="customerPhone">Phone / WhatsApp Number *</label>
+        <input type="tel" id="customerPhone" name="customer_phone" class="form-control" placeholder="+91 98765 43210" required>
+      </div>
+    </div>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:1rem; margin:1.5rem 0; font-size:0.85rem; color:#475569;">
+      🔒 <strong>10-Minute Hold Guarantee:</strong> When you proceed to checkout, your chosen slot is locked exclusively for you for 10 minutes to prevent anyone else from taking it while you pay.
+    </div>
+
+    <button type="submit" id="continueCheckoutBtn" class="btn btn-primary btn-full" disabled style="padding:0.85rem; font-size:1.05rem;">
+      Proceed to Checkout & Hold Slot →
+    </button>
+  </form>
+</div>
+{% endblock %}

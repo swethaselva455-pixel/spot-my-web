@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpotMyShoot | Book Hourly Shoot Locations for Creators</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="header"></header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container">
+      <h1>Book Unique Shoot Locations<br>by the Hour</h1>
+      <p>Explore villas, studios, beaches, and heritage courtyards for cinematography, fashion campaigns, pre-weddings, and viral reels.</p>
+      
+      <!-- Quick Search Bar -->
+      <div class="search-box-card">
+        <div class="search-field">
+          <label>Location / Area</label>
+          <input type="text" id="hero-search-query" placeholder="e.g. ECR, T. Nagar, Adyar">
+        </div>
+        <div class="search-field">
+          <label>Shoot Type</label>
+          <select id="hero-category">
+            <option value="">All Categories</option>
+            <option value="Pre-wedding">Pre-wedding</option>
+            <option value="Fashion">Fashion</option>
+            <option value="Cinematography">Cinematography</option>
+            <option value="Reels">Reels</option>
+            <option value="Maternity">Maternity</option>
+            <option value="Wedding">Wedding</option>
+          </select>
+        </div>
+        <div class="search-field">
+          <label>Space Type</label>
+          <select id="hero-type">
+            <option value="">All Spaces</option>
+            <option value="villa">Luxury Villa</option>
+            <option value="studio">Creative Studio</option>
+            <option value="beach">Private Beach</option>
+            <option value="garden">Botanical Garden</option>
+            <option value="heritage">Heritage Mansion</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-lg" onclick="handleHeroSearch()">Search Spaces</button>
+      </div>
+
+      <!-- Quick Category Pills -->
+      <div class="category-strip">
+        <span class="cat-pill" onclick="filterByCategory('Pre-wedding')">💍 Pre-wedding</span>
+        <span class="cat-pill" onclick="filterByCategory('Fashion')">👗 Fashion</span>
+        <span class="cat-pill" onclick="filterByCategory('Reels')">📱 Instagram Reels</span>
+        <span class="cat-pill" onclick="filterByCategory('Cinematography')">🎥 Cinematography</span>
+        <span class="cat-pill" onclick="filterByCategory('Maternity')">🌸 Maternity</span>
+        <span class="cat-pill" onclick="filterByCategory('Wedding')">✨ Wedding</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Locations -->
+  <main class="container" style="padding-top: 40px; padding-bottom: 60px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+      <div>
+        <h2 style="font-size: 26px; font-weight: 800; letter-spacing: -0.5px;">Trending Shoot Locations</h2>
+        <p style="color: var(--text-muted); font-size: 15px;">Handpicked spaces across Chennai with verified host availability.</p>
+      </div>
+      <a href="/locations.html" class="btn btn-secondary">View All Spaces &rarr;</a>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid-cards" id="featured-locations-grid">
+      <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: var(--text-muted);">
+        Loading top shoot locations...
+      </div>
+    </div>
+  </main>
+
+  <!-- Value Props -->
+  <section style="background: white; border-top: 1px solid var(--border); padding: 60px 0;">
+    <div class="container">
+      <div style="text-align: center; max-width: 600px; margin: 0 auto 40px;">
+        <h2 style="font-size: 28px; font-weight: 800; margin-bottom: 12px;">Built Specifically for Shoot Crews</h2>
+        <p style="color: var(--text-muted);">From private dressing suites to three-phase power and generator backups.</p>
+      </div>
+      <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <div class="stat-card">
+          <div style="font-size: 28px; margin-bottom: 8px;">⏱️</div>
+          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">Hourly Bookings</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Only pay for the exact hours your shoot takes. Minimum 2-3 hours depending on location.</p>
+        </div>
+        <div class="stat-card">
+          <div style="font-size: 28px; margin-bottom: 8px;">🔒</div>
+          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">10-Minute Protected Hold</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Your chosen shoot slot is locked so other photographers cannot double-book while you check out.</p>
+        </div>
+        <div class="stat-card">
+          <div style="font-size: 28px; margin-bottom: 8px;">🛡️</div>
+          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">Clear Cancellation Policies</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Transparent refunds based on hours remaining before shoot start. Instant automated refund initiation.</p>
+        </div>
+        <div class="stat-card">
+          <div style="font-size: 28px; margin-bottom: 8px;">📄</div>
+          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 6px;">GST Tax Invoices</h3>
+          <p style="font-size: 13px; color: var(--text-muted);">Automated downloadable PDF GST invoices for your production accounting and client billings.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-col">
+        <div class="logo" style="color: white; margin-bottom: 16px;">🎬 SpotMyShoot</div>
+        <p>India's leading marketplace for booking hourly production locations. Connect with villa owners, studio lofts, and garden estates across Chennai, Bangalore, and Mumbai.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="/locations.html?type=villa">Villas & Estates</a></li>
+          <li><a href="/locations.html?type=studio">Studios & Cyc Walls</a></li>
+          <li><a href="/locations.html?type=beach">Beachfronts</a></li>
+          <li><a href="/locations.html?type=heritage">Heritage Mansions</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Owners</h4>
+        <ul>
+          <li><a href="/register.html?role=owner">List Your Property</a></li>
+          <li><a href="/owner.html">Owner Dashboard</a></li>
+          <li><a href="/login.html">Host Login</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="/locations.html">Browse All</a></li>
+          <li><a href="/login.html">Sign In</a></li>
+          <li><a href="/admin.html">Admin Portal</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="container footer-bottom">
+      &copy; 2026 SpotMyShoot Inc. All rights reserved. GST Registered.
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    async function loadFeaturedLocations() {
+      const grid = document.getElementById('featured-locations-grid');
+      try {
+        const locations = await apiFetch('/properties?page_size=6');
+        if (!locations || locations.length === 0) {
+          grid.innerHTML = '<p style="grid-column: 1 / -1; text-align: center; color: var(--text-muted);">No locations published yet.</p>';
+          return;
+        }
+
+        grid.innerHTML = locations.map(loc => `
+          <div class="card" onclick="window.location.href='/property.html?id=${loc.id}'" style="cursor: pointer;">
+            <div class="card-img-wrap">
+              <img src="${loc.cover_image || 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80'}" class="card-img" alt="${loc.name}">
+              <span class="card-badge">${loc.property_type}</span>
+              ${loc.avg_rating > 0 ? `<span class="card-rating">★ ${loc.avg_rating.toFixed(1)}</span>` : ''}
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">${loc.name}</h3>
+              <div class="card-location">📍 ${loc.area}, ${loc.city}</div>
+              <div class="card-tags">
+                ${loc.categories.slice(0, 3).map(c => `<span class="card-tag">${c}</span>`).join('')}
+              </div>
+              <div class="card-footer">
+                <div class="card-price">${formatINR(loc.hourly_price)} <span>/ hour</span></div>
+                <span class="btn btn-secondary btn-sm">View Space &rarr;</span>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        grid.innerHTML = `<p style="grid-column: 1 / -1; text-align: center; color: var(--danger);">Failed to load locations: ${e.message}</p>`;
+      }
+    }
+
+    function handleHeroSearch() {
+      const q = document.getElementById('hero-search-query').value.trim();
+      const cat = document.getElementById('hero-category').value;
+      const type = document.getElementById('hero-type').value;
+
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (cat) params.set('category', cat);
+      if (type) params.set('type', type);
+
+      window.location.href = `/locations.html?${params.toString()}`;
+    }
+
+    function filterByCategory(cat) {
+      window.location.href = `/locations.html?category=${encodeURIComponent(cat)}`;
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFeaturedLocations);
+  </script>
+</body>
+</html>

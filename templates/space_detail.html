@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}{{ service.name }} — {{ config.BUSINESS_NAME }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  .property-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  .verified-pill {
+    background: #dcfce7;
+    color: #166534;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: 200px 200px;
+    gap: 1rem;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
+  .gallery-main {
+    grid-row: span 2;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .gallery-sub {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .space-layout {
+    display: grid;
+    grid-template-columns: 1.6fr 1.1fr;
+    gap: 2.5rem;
+  }
+  .amenities-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0 2rem;
+  }
+  .amenity-chip {
+    background: #f1f5f9;
+    color: #334155;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+  @media (max-width: 768px) {
+    .gallery-grid { grid-template-columns: 1fr; grid-template-rows: 240px; }
+    .gallery-sub { display: none; }
+    .space-layout { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="margin-bottom:1rem;">
+  <a href="{{ url_for('services_page') }}" style="color:#64748b; font-size:0.9rem;">&larr; Back to all locations</a>
+</div>
+
+<div class="property-heading">
+  <div>
+    <p style="color:#2563eb; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:0.8rem;">VERIFIED SHOOT LOCATION</p>
+    <h1 style="font-size:2.2rem; margin:0.25rem 0;">{{ service.name }}</h1>
+    <p style="color:#64748b;">▱ {{ service.location_area }} &nbsp;&bull;&nbsp; ★ 4.9 (32 creator reviews)</p>
+  </div>
+  <span class="verified-pill">✓ Verified by SpotMyShoot</span>
+</div>
+
+<!-- Photo Gallery -->
+<div class="gallery-grid">
+  <img src="{{ service.gallery_images[0] }}" alt="{{ service.name }}" class="gallery-main">
+  <img src="{{ service.gallery_images[1] }}" alt="{{ service.name }} Interior" class="gallery-sub">
+  <img src="{{ service.gallery_images[2] }}" alt="{{ service.name }} Detail" class="gallery-sub">
+</div>
+
+<!-- Main Detail & Booking Sidebar -->
+<div class="space-layout">
+  <div>
+    <h2 style="font-size:1.5rem; margin-bottom:0.75rem;">About this creative space</h2>
+    <p style="color:#475569; font-size:1.05rem; line-height:1.7; margin-bottom:1.5rem;">
+      {{ service.description }} A premier creative space tailored for pre-wedding productions, maternity shoots, commercial fashion lookbooks, and high-engagement digital content.
+    </p>
+
+    <h3 style="font-size:1.15rem; margin-top:2rem;">Included Amenities & Backdrops</h3>
+    <div class="amenities-wrap">
+      {% for item in service.amenities_list %}
+        <span class="amenity-chip">✓ {{ item }}</span>
+      {% endfor %}
+    </div>
+
+    <h3 style="font-size:1.15rem; margin-top:2rem;">Production Guidelines</h3>
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.25rem; margin-top:0.75rem; color:#475569; font-size:0.9rem; line-height:1.6;">
+      <p>• Maximum crew size: Up to 15 people (larger crews require prior approval).</p>
+      <p>• Power setup: 32A three-phase distribution sockets available for heavy light fixtures.</p>
+      <p>• Sound policy: Amplified audio permitted inside sound-dampened areas; outdoor live audio after 7 PM restricted.</p>
+    </div>
+  </div>
+
+  <!-- Sidebar Booking Box -->
+  <aside>
+    <div class="form-card" style="box-shadow:var(--shadow-lg);">
+      <p style="color:#2563eb; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:0.8rem;">RESERVE THIS SPACE</p>
+      <div style="display:flex; align-items:baseline; gap:0.5rem; margin:0.5rem 0 1.25rem;">
+        <span style="font-size:2rem; font-weight:800; color:#0f172a;">{{ config.CURRENCY_SYMBOL }}{{ "%.0f"|format(service.price) }}</span>
+        <span style="color:#64748b; font-size:0.95rem;">/ {{ service.duration_hours }} hr session</span>
+      </div>
+
+      <form method="POST" action="{{ url_for('initiate_booking') }}" id="detailBookingForm">
+        <input type="hidden" name="service_id" value="{{ service.id }}">
+
+        <div class="form-group">
+          <label>Shoot Category</label>
+          <select class="form-control" name="shoot_category">
+            <option>Pre-wedding</option>
+            <option>Maternity</option>
+            <option>Wedding & Reception</option>
+            <option>Reels & Video Content</option>
+            <option>Fashion & Commercial</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="detailDate">Choose Date *</label>
+          <input type="date" id="detailDate" name="date" class="form-control" min="{{ min_date }}" max="{{ max_date }}" value="{{ min_date }}" required>
+        </div>
+
+        <div class="form-group">
+          <label>Available Slots for Date *</label>
+          <div id="detailSlotsContainer" class="slots-container" style="max-height:180px; overflow-y:auto;">
+            <div style="padding:0.5rem; color:#64748b; font-size:0.85rem;">Loading slots...</div>
+          </div>
+          <input type="hidden" name="slot_id" id="detailSlotId" required>
+        </div>
+
+        <div class="form-group">
+          <label>Creator Name *</label>
+          <input type="text" name="customer_name" class="form-control" placeholder="Your name" required>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" name="customer_email" class="form-control" placeholder="you@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label>Phone Number *</label>
+          <input type="tel" name="customer_phone" class="form-control" placeholder="+91 98765 43210" required>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; padding:0.75rem 0; border-top:1px solid #e2e8f0; font-size:0.95rem; margin-top:0.5rem;">
+          <span>Estimated Total (incl. {{ "%.0f"|format(config.TAX_PERCENT) }}% GST)</span>
+          <strong style="color:#16a34a;">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(service.price * (1 + config.TAX_PERCENT / 100)) }}</strong>
+        </div>
+
+        <button type="submit" id="detailSubmitBtn" class="btn btn-primary btn-full" disabled style="padding:0.85rem; font-size:1rem; margin-top:0.75rem;">
+          Reserve & Hold Slot (10 Min) &rarr;
+        </button>
+      </form>
+      <p style="text-align:center; font-size:0.75rem; color:#94a3b8; margin-top:0.75rem;">
+        100% full refund if cancelled up to 24h prior.
+      </p>
+    </div>
+  </aside>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const dateInput = document.getElementById('detailDate');
+    const container = document.getElementById('detailSlotsContainer');
+    const slotInput = document.getElementById('detailSlotId');
+    const submitBtn = document.getElementById('detailSubmitBtn');
+    const serviceId = "{{ service.id }}";
+
+    async function loadSlots() {
+      const dateVal = dateInput.value;
+      if (!dateVal) return;
+      container.innerHTML = '<div style="padding:0.5rem; color:#64748b; font-size:0.85rem;">Checking availability...</div>';
+      slotInput.value = '';
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/slots?service_id=${serviceId}&date=${dateVal}`);
+        const data = await res.json();
+        container.innerHTML = '';
+        if (!data.slots || data.slots.length === 0) {
+          container.innerHTML = '<div style="padding:0.5rem; color:#64748b; font-size:0.85rem;">No slots found for this date.</div>';
+          return;
+        }
+
+        data.slots.forEach(slot => {
+          const pill = document.createElement('div');
+          pill.className = `slot-pill ${slot.is_available ? '' : 'disabled'}`;
+          pill.style.padding = '0.5rem';
+          pill.innerHTML = `
+            <div style="font-weight:600; font-size:0.85rem;">${slot.start_time} - ${slot.end_time}</div>
+            <div style="font-size:0.7rem;">${slot.is_available ? 'Open' : 'Full'}</div>
+          `;
+          if (slot.is_available) {
+            pill.addEventListener('click', () => {
+              container.querySelectorAll('.slot-pill').forEach(el => el.classList.remove('selected'));
+              pill.classList.add('selected');
+              slotInput.value = slot.id;
+              submitBtn.disabled = false;
+            });
+          }
+          container.appendChild(pill);
+        });
+      } catch (e) {
+        container.innerHTML = '<div style="color:#dc2626; font-size:0.85rem;">Error loading slots.</div>';
+      }
+    }
+
+    dateInput.addEventListener('change', loadSlots);
+    loadSlots();
+  });
+</script>
+{% endblock %}

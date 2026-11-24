@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Owner Dashboard | SpotMyShoot</title>
+  <link rel="stylesheet" href="/styles.css">
+  <style>
+    .prop-row-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+  </style>
+</head>
+<body>
+  <header class="header"></header>
+
+  <div class="container" style="padding-top: 30px; padding-bottom: 70px;">
+    <!-- Dashboard Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div>
+        <h1 style="font-size: 28px; font-weight: 800; letter-spacing: -0.5px;">Location Host Dashboard</h1>
+        <p style="color: var(--text-muted); font-size: 14px;">Manage your properties, availability calendar, accept shoot requests, and monitor your earnings.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddPropertyModal()">+ Add New Property</button>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Listed Properties</div>
+        <div class="stat-value" id="stat-props-count">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Requests</div>
+        <div class="stat-value" id="stat-pending-requests" style="color: var(--warning);">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Gross Revenue</div>
+        <div class="stat-value" id="stat-gross-revenue">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Host Earnings</div>
+        <div class="stat-value" id="stat-net-earnings" style="color: var(--success);">₹0</div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchOwnerTab('properties', this)">My Properties</button>
+      <button class="tab-btn" onclick="switchOwnerTab('requests', this)">Booking Requests</button>
+      <button class="tab-btn" onclick="switchOwnerTab('availability', this)">Availability & Calendar</button>
+      <button class="tab-btn" onclick="switchOwnerTab('earnings', this)">Earnings & Payouts</button>
+    </div>
+
+    <!-- Tab 1: Properties List -->
+    <div id="tab-properties" class="tab-pane active">
+      <div id="properties-container">
+        <p style="color: var(--text-muted); text-align: center; padding: 40px;">Loading properties...</p>
+      </div>
+    </div>
+
+    <!-- Tab 2: Booking Requests -->
+    <div id="tab-requests" class="tab-pane">
+      <div id="requests-container">
+        <p style="color: var(--text-muted); text-align: center; padding: 40px;">Loading requests...</p>
+      </div>
+    </div>
+
+    <!-- Tab 3: Availability & Calendar Editor -->
+    <div id="tab-availability" class="tab-pane">
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; margin-bottom: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Weekly Recurring Hours</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Set operating open and close hours for each day of the week.</p>
+        
+        <div class="form-group">
+          <label class="form-label">Select Property to Configure</label>
+          <select id="avail-prop-select" class="form-control" onchange="loadPropertyRules(this.value)" style="max-width: 400px;"></select>
+        </div>
+
+        <div id="weekly-hours-form" style="max-width: 500px;">
+          <!-- Rendered dynamically for Monday to Sunday -->
+        </div>
+        <button class="btn btn-primary" onclick="saveWeeklyHours()" style="margin-top: 14px;">Save Operating Hours</button>
+      </div>
+
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px;">
+        <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Block Specific Dates or Maintenance Slots</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">Block specific timeframes from being booked by creators.</p>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1.5fr auto; gap: 12px; align-items: flex-end; max-width: 800px;">
+          <div>
+            <label class="form-label">Start Date & Time</label>
+            <input type="datetime-local" id="block-start" class="form-control">
+          </div>
+          <div>
+            <label class="form-label">End Date & Time</label>
+            <input type="datetime-local" id="block-end" class="form-control">
+          </div>
+          <div>
+            <label class="form-label">Reason</label>
+            <input type="text" id="block-reason" class="form-control" placeholder="Maintenance / Owner reservation">
+          </div>
+          <div>
+            <button class="btn btn-danger" onclick="submitBlockSlot()">Block Slot</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 4: Earnings & Payouts -->
+    <div id="tab-earnings" class="tab-pane">
+      <div style="background: white; border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 28px;">
+        <h3 style="font-size: 20px; font-weight: 700; margin-bottom: 16px;">Payout Settlement Summary</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 14px; max-width: 600px; margin-bottom: 24px;">
+          <div>
+            <span style="color: var(--text-muted);">Total Confirmed Bookings:</span>
+            <div id="earn-total-shoots" style="font-size: 20px; font-weight: 800;">0</div>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Gross Location Rentals:</span>
+            <div id="earn-gross" style="font-size: 20px; font-weight: 800;">₹0</div>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Platform Commission (10%):</span>
+            <div id="earn-commission" style="font-size: 20px; font-weight: 800; color: var(--accent);">-₹0</div>
+          </div>
+          <div>
+            <span style="color: var(--text-muted);">Net Host Earnings:</span>
+            <div id="earn-net" style="font-size: 24px; font-weight: 800; color: var(--success);">₹0</div>
+          </div>
+        </div>
+        <div class="alert alert-info" style="max-width: 600px;">
+          Payouts are processed weekly to your registered bank account via RazorpayX Route settlement.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Add Property -->
+  <div id="add-prop-modal" class="modal-overlay">
+    <div class="modal" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3 class="modal-title">List a New Shoot Location</h3>
+        <button class="modal-close" onclick="closeAddPropertyModal()">&times;</button>
+      </div>
+
+      <form id="add-property-form" onsubmit="handleAddPropertySubmit(event)">
+        <div class="form-group">
+          <label class="form-label">Property Title *</label>
+          <input type="text" id="add-name" class="form-control" required placeholder="e.g. Whispering Palms Coastal Villa">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Space Type *</label>
+            <select id="add-type" class="form-control" required>
+              <option value="villa">Luxury Villa</option>
+              <option value="studio">Creative Studio</option>
+              <option value="beach">Beachfront</option>
+              <option value="garden">Botanical Garden</option>
+              <option value="heritage">Heritage Courtyard</option>
+              <option value="other">Other Space</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">City *</label>
+            <input type="text" id="add-city" class="form-control" required value="Chennai">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Area / Locality *</label>
+            <input type="text" id="add-area" class="form-control" required placeholder="e.g. ECR, Adyar">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Full Address *</label>
+          <input type="text" id="add-address" class="form-control" required placeholder="Complete building address for approved creators">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label class="form-label">Hourly Rate (₹) *</label>
+            <input type="number" id="add-price" class="form-control" required min="500" value="3000">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Min Booking Hours</label>
+            <input type="number" id="add-min-hours" class="form-control" value="2" min="1" max="12">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Max Crew Size</label>
+            <input type="number" id="add-max-crew" class="form-control" value="25" min="1" max="100">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Cancellation Policy</label>
+          <select id="add-policy" class="form-control">
+            <option value="flexible">Flexible (100% refund up to 24h)</option>
+            <option value="moderate" selected>Moderate (100% up to 72h, 50% up to 24h)</option>
+            <option value="strict">Strict (50% up to 7 days)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Description & Space Features</label>
+          <textarea id="add-description" class="form-control" rows="3" placeholder="Describe lighting, rooms, views, backdrops..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Amenities (Comma separated)</label>
+          <input type="text" id="add-amenities" class="form-control" value="Air Conditioning, Dressing Room, WiFi, Generator Backup, Parking">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Suitable Shoot Categories (Comma separated)</label>
+          <input type="text" id="add-categories" class="form-control" value="Pre-wedding, Fashion, Reels, Cinematography">
+        </div>
+
+        <div class="form-group">
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+            <input type="checkbox" id="add-auto-accept">
+            <span>Instant Booking (Auto-accept without manual review)</span>
+          </label>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+          <button type="button" class="btn btn-secondary" onclick="closeAddPropertyModal()">Cancel</button>
+          <button type="submit" id="btn-submit-prop" class="btn btn-primary">Submit for Admin Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Upload Image -->
+  <div id="upload-img-modal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Upload Property Image</h3>
+        <button class="modal-close" onclick="closeUploadModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Photo (JPG, PNG, WebP &le; 10MB)</label>
+        <input type="file" id="prop-image-file" class="form-control" accept="image/jpeg,image/png,image/webp">
+      </div>
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600;">
+          <input type="checkbox" id="prop-image-is-cover">
+          <span>Set as Primary Cover Photo</span>
+        </label>
+      </div>
+      <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 18px;">
+        <button class="btn btn-secondary" onclick="closeUploadModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="submitPropertyImage()">Upload Image</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+  <script>
+    let myProperties = [];
+    let myBookings = [];
+    let currentPropIdForUpload = null;
+    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+    function switchOwnerTab(tab, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(`tab-${tab}`).classList.add('active');
+    }
+
+    async function loadOwnerDashboard() {
+      const user = getStoredUser();
+      if (!user || (user.role !== 'owner' && user.role !== 'admin')) {
+        showToast('Access restricted to Property Hosts.', 'error');
+        setTimeout(() => window.location.href = '/login.html', 1000);
+        return;
+      }
+
+      try {
+        // Load properties
+        myProperties = await apiFetch('/owner/properties');
+        renderProperties();
+        populatePropertyDropdown();
+
+        // Load bookings & requests
+        myBookings = await apiFetch('/owner/bookings');
+        renderRequests();
+
+        // Load earnings
+        const earnings = await apiFetch('/owner/earnings');
+        renderEarnings(earnings);
+
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    function renderProperties() {
+      const container = document.getElementById('properties-container');
+      document.getElementById('stat-props-count').innerText = myProperties.length;
+
+      if (myProperties.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 60px; background: white; border-radius: var(--radius-xl); border: 1px solid var(--border);">
+            <h3>No Properties Listed Yet</h3>
+            <p style="color: var(--text-muted); margin: 8px 0 16px;">List your villa, studio, or outdoor shoot space to start receiving bookings.</p>
+            <button class="btn btn-primary" onclick="openAddPropertyModal()">+ Add Your First Space</button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = myProperties.map(p => {
+        const cover = p.images && p.images.length > 0 ? p.images[0].url : 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=400&q=80';
+        return `
+          <div class="prop-row-card">
+            <div style="display: flex; gap: 16px; align-items: center;">
+              <img src="${cover}" style="width: 100px; height: 75px; object-fit: cover; border-radius: var(--radius-md);" alt="${p.name}">
+              <div>
+                <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+                  <span class="status-badge status-${p.approval_status}">${p.approval_status}</span>
+                  ${p.is_published ? '<span class="status-badge status-active">Published</span>' : '<span class="status-badge status-rejected">Unpublished</span>'}
+                </div>
+                <h3 style="font-size: 17px; font-weight: 700;">${p.name}</h3>
+                <div style="font-size: 13px; color: var(--text-muted);">📍 ${p.area}, ${p.city} &bull; ${formatINR(p.hourly_price)}/hr</div>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <button class="btn btn-secondary btn-sm" onclick="openUploadModal(${p.id})">📷 Add Photos (${p.images.length})</button>
+              <a href="/property.html?id=${p.id}" target="_blank" class="btn btn-secondary btn-sm">Preview Space</a>
+              <button class="btn btn-danger btn-sm" onclick="deleteProperty(${p.id})">Delete</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderRequests() {
+      const container = document.getElementById('requests-container');
+      const pending = myBookings.filter(b => b.status === 'pending_owner');
+      document.getElementById('stat-pending-requests').innerText = pending.length;
+
+      if (myBookings.length === 0) {
+        container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px;">No booking requests received yet.</p>';
+        return;
+      }
+
+      container.innerHTML = myBookings.map(b => {
+        const isPending = b.status === 'pending_owner';
+        return `
+          <div class="prop-row-card">
+            <div>
+              <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 4px;">
+                <span style="font-weight: 800; font-size: 14px; color: var(--primary);">${b.booking_code}</span>
+                <span class="status-badge status-${b.status}">${b.status.replace('_', ' ')}</span>
+              </div>
+              <h4 style="font-size: 16px; font-weight: 700;">${b.property_name} &bull; ${b.shoot_category}</h4>
+              <div style="font-size: 13px; color: var(--text-muted);">Creator: <b>${b.customer_name}</b> (${b.customer_email}) &bull; Crew: ${b.crew_size}</div>
+              <div style="font-size: 13px; color: var(--text-main); margin-top: 4px;">
+                📅 <b>${formatISTDate(b.start_datetime)}</b> (${formatISTTime(b.start_datetime)} - ${formatISTTime(b.end_datetime)}, ${b.duration_hours} hrs)
+              </div>
+              ${b.special_requests ? `<div style="font-size: 12px; color: #64748B; margin-top: 4px;">Request: "${b.special_requests}"</div>` : ''}
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+              <div style="font-size: 18px; font-weight: 800; color: var(--text-main);">${formatINR(b.total_amount)}</div>
+              ${isPending ? `
+                <div style="display: flex; gap: 8px;">
+                  <button class="btn btn-success btn-sm" onclick="acceptBooking(${b.id})">✓ Accept Request</button>
+                  <button class="btn btn-danger btn-sm" onclick="rejectBooking(${b.id})">✕ Decline</button>
+                </div>
+              ` : `
+                <span style="font-size: 12px; color: var(--text-muted);">Processed</span>
+              `}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderEarnings(e) {
+      document.getElementById('stat-gross-revenue').innerText = formatINR(e.gross_rental);
+      document.getElementById('stat-net-earnings').innerText = formatINR(e.net_earnings);
+
+      document.getElementById('earn-total-shoots').innerText = e.total_bookings;
+      document.getElementById('earn-gross').innerText = formatINR(e.gross_rental);
+      document.getElementById('earn-commission').innerText = `-${formatINR(e.platform_commission)}`;
+      document.getElementById('earn-net').innerText = formatINR(e.net_earnings);
+    }
+
+    async function acceptBooking(id) {
+      if (!confirm('Accept this shoot booking? The creator will be notified and slot confirmed.')) return;
+      try {
+        await apiFetch(`/owner/bookings/${id}/accept`, { method: 'POST' });
+        showToast('Booking confirmed!', 'success');
+        loadOwnerDashboard();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    async function rejectBooking(id) {
+      const reason = prompt('Reason for declining this request (customer will receive 100% full refund):');
+      if (reason === null) return;
+      try {
+        await apiFetch(`/owner/bookings/${id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason: reason || 'Host unavailable' })
+        });
+        showToast('Booking declined and full refund processed.', 'info');
+        loadOwnerDashboard();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    function populatePropertyDropdown() {
+      const sel = document.getElementById('avail-prop-select');
+      sel.innerHTML = myProperties.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      if (myProperties.length > 0) {
+        loadPropertyRules(myProperties[0].id);
+      }
+    }
+
+    async function loadPropertyRules(propId) {
+      const container = document.getElementById('weekly-hours-form');
+      try {
+        const rules = await apiFetch(`/owner/properties/${propId}/availability`);
+        container.innerHTML = weekdays.map((day, idx) => {
+          const rule = rules.find(r => r.day_of_week === idx);
+          const open = rule ? rule.open_time : '06:00';
+          const close = rule ? rule.close_time : '22:00';
+          return `
+            <div style="display: grid; grid-template-columns: 120px 1fr 1fr; gap: 10px; align-items: center; margin-bottom: 8px;">
+              <span style="font-weight: 600; font-size: 13px;">${day}</span>
+              <input type="time" class="form-control" id="day-open-${idx}" value="${open}">
+              <input type="time" class="form-control" id="day-close-${idx}" value="${close}">
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        container.innerHTML = `<p style="color: var(--danger);">Failed to load rules: ${e.message}</p>`;
+      }
+    }
+
+    async function saveWeeklyHours() {
+      const propId = document.getElementById('avail-prop-select').value;
+      const rules = [];
+      for (let i = 0; i < 7; i++) {
+        rules.push({
+          day_of_week: i,
+          open_time: document.getElementById(`day-open-${i}`).value,
+          close_time: document.getElementById(`day-close-${i}`).value
+        });
+      }
+
+      try {
+        await apiFetch(`/owner/properties/${propId}/availability`, {
+          method: 'PUT',
+          body: JSON.stringify(rules)
+        });
+        showToast('Weekly operating hours updated successfully!', 'success');
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    async function submitBlockSlot() {
+      const propId = document.getElementById('avail-prop-select').value;
+      const start = document.getElementById('block-start').value;
+      const end = document.getElementById('block-end').value;
+      const reason = document.getElementById('block-reason').value;
+
+      if (!start || !end) {
+        showToast('Please select start and end timestamps.', 'error');
+        return;
+      }
+
+      try {
+        await apiFetch(`/owner/properties/${propId}/block-slot`, {
+          method: 'POST',
+          body: JSON.stringify({
+            start_datetime: new Date(start).toISOString(),
+            end_datetime: new Date(end).toISOString(),
+            reason: reason || 'Owner Block'
+          })
+        });
+        showToast('Slot successfully blocked from bookings.', 'success');
+        document.getElementById('block-start').value = '';
+        document.getElementById('block-end').value = '';
+        document.getElementById('block-reason').value = '';
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    // Modal helpers
+    function openAddPropertyModal() {
+      document.getElementById('add-prop-modal').classList.add('active');
+    }
+    function closeAddPropertyModal() {
+      document.getElementById('add-prop-modal').classList.remove('active');
+    }
+
+    async function handleAddPropertySubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit-prop');
+      btn.disabled = true;
+      btn.innerText = 'Submitting...';
+
+      const body = {
+        name: document.getElementById('add-name').value.trim(),
+        property_type: document.getElementById('add-type').value,
+        city: document.getElementById('add-city').value.trim(),
+        area: document.getElementById('add-area').value.trim(),
+        address: document.getElementById('add-address').value.trim(),
+        hourly_price: parseInt(document.getElementById('add-price').value, 10),
+        min_hours: parseInt(document.getElementById('add-min-hours').value, 10),
+        max_crew_size: parseInt(document.getElementById('add-max-crew').value, 10),
+        cancellation_policy: document.getElementById('add-policy').value,
+        description: document.getElementById('add-description').value.trim(),
+        amenities: document.getElementById('add-amenities').value.split(',').map(s => s.trim()).filter(Boolean),
+        categories: document.getElementById('add-categories').value.split(',').map(s => s.trim()).filter(Boolean),
+        auto_accept: document.getElementById('add-auto-accept').checked
+      };
+
+      try {
+        await apiFetch('/owner/properties', {
+          method: 'POST',
+          body: JSON.stringify(body)
+        });
+        showToast('Property submitted! Awaiting administrator approval.', 'success');
+        closeAddPropertyModal();
+        loadOwnerDashboard();
+      } catch (err) {
+        showToast(err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Submit for Admin Review';
+      }
+    }
+
+    function openUploadModal(propId) {
+      currentPropIdForUpload = propId;
+      document.getElementById('upload-img-modal').classList.add('active');
+    }
+    function closeUploadModal() {
+      document.getElementById('upload-img-modal').classList.remove('active');
+      currentPropIdForUpload = null;
+    }
+
+    async function submitPropertyImage() {
+      const fileInput = document.getElementById('prop-image-file');
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showToast('Please select an image file to upload.', 'error');
+        return;
+      }
+      const file = fileInput.files[0];
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('File size must not exceed 10MB.', 'error');
+        return;
+      }
+
+      const isCover = document.getElementById('prop-image-is-cover').checked;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('is_cover', isCover);
+
+      try {
+        await apiFetch(`/owner/properties/${currentPropIdForUpload}/images`, {
+          method: 'POST',
+          body: formData
+        });
+        showToast('Photo uploaded successfully!', 'success');
+        closeUploadModal();
+        loadOwnerDashboard();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    async function deleteProperty(id) {
+      if (!confirm('Are you sure you want to delete this property listing?')) return;
+      try {
+        await apiFetch(`/owner/properties/${id}`, { method: 'DELETE' });
+        showToast('Property deleted.', 'info');
+        loadOwnerDashboard();
+      } catch (e) {
+        showToast(e.message, 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadOwnerDashboard);
+  </script>
+</body>
+</html>

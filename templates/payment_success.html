@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Booking Confirmed — {{ config.BUSINESS_NAME }}{% endblock %}
+
+{% block content %}
+<div style="max-width:700px; margin:0 auto;">
+  <div class="form-card" style="text-align:center; padding:3rem 2rem;">
+    <div style="width:68px; height:68px; background:#dcfce7; color:#16a34a; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:2rem; margin-bottom:1rem;">
+      ✓
+    </div>
+    <p style="color:#16a34a; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; font-size:0.85rem;">PAYMENT SUCCESSFUL</p>
+    <h1 style="font-size:2rem; margin-bottom:0.5rem;">Your Shoot Space is Confirmed!</h1>
+    <p style="color:#64748b; margin-bottom:1.5rem;">A confirmation receipt and booking details have been emailed to <strong>{{ booking.customer_email }}</strong>.</p>
+
+    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.5rem; text-align:left; margin-bottom:2rem;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:0.75rem; margin-bottom:0.75rem;">
+        <span style="color:#64748b; font-size:0.9rem;">Booking Reference</span>
+        <strong style="font-size:1.25rem; color:#2563eb; letter-spacing:0.05em;">{{ booking.booking_reference }}</strong>
+      </div>
+
+      <table class="receipt-table" style="margin:0;">
+        <tr>
+          <th>Shoot Space</th>
+          <td><strong>{{ booking.service.name }}</strong></td>
+        </tr>
+        <tr>
+          <th>Date</th>
+          <td>{{ booking.slot.slot_date.strftime('%A, %d %B %Y') }}</td>
+        </tr>
+        <tr>
+          <th>Time Window</th>
+          <td>{{ booking.slot.start_time }} &mdash; {{ booking.slot.end_time }}</td>
+        </tr>
+        <tr>
+          <th>Primary Contact</th>
+          <td>{{ booking.customer_name }} ({{ booking.customer_phone }})</td>
+        </tr>
+        <tr>
+          <th>Amount Paid</th>
+          <td><strong style="color:#16a34a;">{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.total_amount) }}</strong></td>
+        </tr>
+        <tr>
+          <th>Status</th>
+          <td><span class="status-pill status-confirmed">Confirmed</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div style="display:flex; justify-content:center; gap:1rem; flex-wrap:wrap;">
+      <button onclick="window.print()" class="btn btn-outline">🖨 Print / Save Receipt</button>
+      <a href="{{ url_for('my_booking_page', booking_id=booking.booking_reference, email=booking.customer_email) }}" class="btn btn-primary">
+        Manage in My Booking →
+      </a>
+      <a href="{{ url_for('index') }}" class="btn btn-outline">Back to Home</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout & Hold Lock — {{ config.BUSINESS_NAME }}{% endblock %}
+
+{% block extra_head %}
+<!-- Razorpay Checkout JS SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+{% endblock %}
+
+{% block content %}
+<div style="max-width:900px; margin:0 auto;">
+  <!-- Hold Lock Countdown Banner -->
+  <div class="hold-timer-banner">
+    <div>
+      ⏱ <strong>Slot Reserved:</strong> Complete your payment before your hold lock expires.
+    </div>
+    <div class="clock" id="countdownTimer" data-seconds="{{ remaining_seconds }}">
+      --:--
+    </div>
+  </div>
+
+  <div class="checkout-grid">
+    <div>
+      <div class="form-card" style="margin-bottom:1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <h2 style="font-size:1.35rem;">Review Booking Summary</h2>
+          <span class="status-pill status-pending">Hold Active</span>
+        </div>
+
+        <table class="receipt-table">
+          <tr>
+            <th>Booking Reference</th>
+            <td><strong>{{ booking.booking_reference }}</strong></td>
+          </tr>
+          <tr>
+            <th>Location Space</th>
+            <td>{{ booking.service.name }}</td>
+          </tr>
+          <tr>
+            <th>Shoot Date</th>
+            <td>{{ booking.slot.slot_date.strftime('%A, %d %B %Y') }}</td>
+          </tr>
+          <tr>
+            <th>Time Slot</th>
+            <td>{{ booking.slot.start_time }} &mdash; {{ booking.slot.end_time }}</td>
+          </tr>
+          <tr>
+            <th>Customer Name</th>
+            <td>{{ booking.customer_name }}</td>
+          </tr>
+          <tr>
+            <th>Email</th>
+            <td>{{ booking.customer_email }}</td>
+          </tr>
+          <tr>
+            <th>Phone</th>
+            <td>{{ booking.customer_phone }}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:1.25rem;">
+        <h4 style="font-size:0.95rem; margin-bottom:0.4rem; color:#1e293b;">Cancellation Policy</h4>
+        <p style="font-size:0.85rem; color:#64748b; line-height:1.5;">
+          • Full refund (100%) if cancelled at least 24 hours prior to appointment start time.<br>
+          • 50% refund if cancelled within 24 hours of appointment.<br>
+          • Instant automatic refund via original payment method upon cancellation in the "My Booking" portal.
+        </p>
+      </div>
+    </div>
+
+    <div>
+      <div class="form-card">
+        <h3 style="font-size:1.2rem; margin-bottom:1rem;">Payment Breakdown</h3>
+        <table class="receipt-table">
+          <tr>
+            <td>Base Slot Fee</td>
+            <td>{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.subtotal) }}</td>
+          </tr>
+          <tr>
+            <td>GST / Taxes ({{ "%.0f"|format(config.TAX_PERCENT) }}%)</td>
+            <td>{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.tax_amount) }}</td>
+          </tr>
+          <tr class="total-row">
+            <td>Grand Total</td>
+            <td>{{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.total_amount) }}</td>
+          </tr>
+        </table>
+
+        <div style="margin: 1.5rem 0;">
+          {% if order.mock %}
+            <div style="background:#fef3c7; border:1px solid #fde68a; color:#92400e; padding:0.75rem; border-radius:6px; font-size:0.85rem; margin-bottom:1rem;">
+              🛠 <strong>Razorpay Test Sandbox:</strong> Running in test mode. You can simulate instant payment confirmation or failure below without needing live banking credentials.
+            </div>
+
+            <button type="button" class="btn btn-primary btn-full" onclick="simulateSuccessPayment('{{ order.id }}', '{{ booking.booking_reference }}')" style="padding:0.85rem; font-size:1rem; margin-bottom:0.75rem;">
+              Simulate Successful Payment (Test)
+            </button>
+
+            <button type="button" class="btn btn-outline btn-full" onclick="alert('Payment simulation declined. The slot remains held until timer expires.')" style="font-size:0.85rem; color:#dc2626; border-color:#fecaca;">
+              Simulate Failed Payment
+            </button>
+          {% else %}
+            <button type="button" class="btn btn-primary btn-full" onclick="processPayment('{{ order.id }}', '{{ order.amount }}', '{{ order.key_id }}', '{{ booking.booking_reference }}', '{{ booking.customer_name }}', '{{ booking.customer_email }}', '{{ booking.customer_phone }}')" style="padding:0.85rem; font-size:1.05rem;">
+              Pay {{ config.CURRENCY_SYMBOL }}{{ "%.2f"|format(booking.total_amount) }} with Razorpay
+            </button>
+          {% endif %}
+        </div>
+
+        <p style="text-align:center; font-size:0.75rem; color:#94a3b8;">
+          🔒 256-bit SSL encrypted & HMAC SHA-256 signature verified.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

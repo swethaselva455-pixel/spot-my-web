@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: spotmyshoot-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: spotmyshoot_user
+      POSTGRES_PASSWORD: spotmyshoot_password
+      POSTGRES_DB: spotmyshoot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spotmyshoot_user -d spotmyshoot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spotmyshoot-api
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://spotmyshoot_user:spotmyshoot_password@db:5432/spotmyshoot
+      - SECRET_KEY=spotmyshoot_super_production_secret_key_minimum_32_chars_1234
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=120
+      - FRONTEND_BASE_URL=http://localhost:8000
+      - TIMEZONE=Asia/Kolkata
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+
+volumes:
+  postgres_data:
